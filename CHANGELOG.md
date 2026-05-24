@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Scaffolded `frontend/` with a Vite + React + TypeScript app, React Query provider wiring, `/api` dev proxy, strict TypeScript path aliases, and initial source folders for components, services, hooks, and types
 - Phase 1 integration smoke test coverage in `backend/tests/integration/test_phase1_smoke.py` for FastAPI startup, health, instruments, prices, news, and mocked collector execution
 - Root `README.md` with prerequisites, setup flow, test commands, project structure, and the documented Phase 1 verification command
 - Jasnah decision note documenting the mocked smoke-test strategy in `.squad/decisions/inbox/jasnah-phase1-smoke-test-mock-db.md`

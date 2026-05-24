@@ -1,0 +1,11 @@
+.app-shell {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+}
