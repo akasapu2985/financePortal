@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Typed frontend API service wrappers in `frontend/src/services/api.ts` and `frontend/src/services/types.ts`, including centralized axios config, normalized response models, and structured `ApiClientError` handling for market data and watchlist CRUD
+- React Query async-state plumbing in `frontend/src/providers/QueryProvider.tsx`, `frontend/src/hooks/queries/useMarketData.ts`, and `frontend/src/main.tsx`, with market-aware stale times, polling defaults, retry backoff, and reusable query keys/hooks
 - Dashboard shell layout in `frontend/src/layouts/DashboardLayout.tsx`, `frontend/src/components/shell/TopBar.tsx`, `frontend/src/components/shell/PanelFrame.tsx`, and `frontend/src/App.tsx`, with a spec-aligned top bar plus left watchlist, center chart, and right news placeholder panels
 - Watchlist CRUD backend support via `backend/src/api/routes/watchlists.py`, including request/response validation, async membership mutation endpoints, and persisted schema migration `backend/src/db/migrations/003_watchlists.sql`
 - Tailwind dark-theme token plumbing in `frontend/` with a Tailwind theme extension, CSS custom properties in `frontend/src/styles/tokens.css`, shared status/surface classes, and a themed shell in `frontend/src/App.tsx`

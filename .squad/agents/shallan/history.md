@@ -9,6 +9,7 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+- 2026-05-24T12:51:37-07:00 — The frontend data layer is split between normalized axios wrappers in `frontend/src/services/api.ts`/`types.ts` and React Query hooks in `frontend/src/hooks/queries/useMarketData.ts`, with app-wide cache defaults centralized in `frontend/src/providers/QueryProvider.tsx`.
 - 2026-05-24T12:51:37-07:00 — Tailwind CSS v4 is wired through the Vite frontend, with design-spec tokens centralized in `frontend/src/styles/tokens.css` and shared theme/status classes in `frontend/src/styles/index.css`.
 - 2026-05-24T12:51:37-07:00 — Dashboard shell composition now lives in `frontend/src/layouts/DashboardLayout.tsx` and reusable shell components under `frontend/src/components/shell/`, with `App.tsx` responsible only for wiring placeholder panel content.
 - The frontend lives in `frontend/` as a Vite + React + TypeScript app with strict mode enabled.
