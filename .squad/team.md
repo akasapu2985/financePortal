@@ -18,6 +18,8 @@
 | Navani | Data Engineer | `.squad/agents/navani/charter.md` | 📊 Active |
 | Jasnah | Tester | `.squad/agents/jasnah/charter.md` | 🧪 Active |
 | Adolin | Product Manager | `.squad/agents/adolin/charter.md` | 📋 Active |
+| Wit | Researcher | `.squad/agents/wit/charter.md` | 🔍 Active |
+| Renarin | Designer | `.squad/agents/renarin/charter.md` | 🎨 Active |
 | Scribe | Session Logger | `.squad/agents/scribe/charter.md` | 📋 Active |
 | Ralph | Work Monitor | `.squad/agents/ralph/charter.md` | 🔄 Active |
 

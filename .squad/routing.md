@@ -15,6 +15,8 @@ How to decide who handles what.
 | MCP server & agent integration | Kaladin + Navani | MCP protocol, Hermes agent, Telegram notifications |
 | Requirements & PRDs | Adolin | PRD writing, user stories, acceptance criteria, feature specs |
 | Ideation & research | Adolin | Feature ideas, competitive analysis, data source research, suggestions |
+| API & data source research | Wit | API discovery, rate limits, auth flows, data format analysis, competitive tool research |
+| Dashboard design & UX | Renarin | Layout, charts, data visualization, information hierarchy, design specs |
 | Scope & priorities | Adolin + Dalinar | What to build next, trade-offs, phasing decisions |
 | Session logging | Scribe | Automatic — never needs routing |
 
@@ -29,6 +31,8 @@ How to decide who handles what.
 | `squad:navani` | Database, data pipelines, caching | Navani |
 | `squad:jasnah` | Testing, quality, verification | Jasnah |
 | `squad:adolin` | Requirements, PRDs, research, ideation | Adolin |
+| `squad:wit` | API research, data sources, competitive analysis | Wit |
+| `squad:renarin` | Design, visualization, UX, dashboard layout | Renarin |
 
 ### How Issue Assignment Works
 
