@@ -1,0 +1,44 @@
+{
+  "agents": {
+    "dalinar": {
+      "persistent_name": "Dalinar",
+      "universe": "Stormlight Archive",
+      "role": "Lead/Architect",
+      "created_at": "2026-05-24T09:58:04Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "kaladin": {
+      "persistent_name": "Kaladin",
+      "universe": "Stormlight Archive",
+      "role": "Backend Dev",
+      "created_at": "2026-05-24T09:58:04Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "shallan": {
+      "persistent_name": "Shallan",
+      "universe": "Stormlight Archive",
+      "role": "Frontend Dev",
+      "created_at": "2026-05-24T09:58:04Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "navani": {
+      "persistent_name": "Navani",
+      "universe": "Stormlight Archive",
+      "role": "Data Engineer",
+      "created_at": "2026-05-24T09:58:04Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "jasnah": {
+      "persistent_name": "Jasnah",
+      "universe": "Stormlight Archive",
+      "role": "Tester",
+      "created_at": "2026-05-24T09:58:04Z",
+      "legacy_named": false,
+      "status": "active"
+    }
+  }
+}
