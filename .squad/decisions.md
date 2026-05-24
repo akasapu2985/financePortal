@@ -72,6 +72,17 @@
 **What:** Keep all setup steps super easy and self-contained. The repo will be moved to a different machine by cloning. Everything must work with minimal manual steps.
 **Why:** User request — captured for team memory
 
+### 2026-05-24T13:25:00-07:00: Token Efficiency Rule
+**By:** Giakas
+**What:** ALL agents MUST minimize token usage:
+1. Keep responses minimal — no verbose dumps into context
+1. Use GitHub Issues (source of truth) + session plan.md for coordination, NOT inline repetition
+3. Do NOT re-read files already processed in the same session
+4. Agent prompts should be concise — pass only what's needed for the task
+5. Recommend `/clear` between independent work items
+6. Never repeat large code blocks back to the user — summarize instead
+**Why:** Token usage is expensive. Context grows exponentially from older responses. Lean communication is a production team requirement.
+
 ## Governance
 
 - All meaningful changes require team consensus
