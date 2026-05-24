@@ -13,7 +13,9 @@ How to decide who handles what.
 | Testing & quality | Jasnah | Unit tests, integration tests, edge cases, load testing |
 | Code review | Dalinar | Review PRs, check quality, suggest improvements |
 | MCP server & agent integration | Kaladin + Navani | MCP protocol, Hermes agent, Telegram notifications |
-| Scope & priorities | Dalinar | What to build next, trade-offs, decisions |
+| Requirements & PRDs | Adolin | PRD writing, user stories, acceptance criteria, feature specs |
+| Ideation & research | Adolin | Feature ideas, competitive analysis, data source research, suggestions |
+| Scope & priorities | Adolin + Dalinar | What to build next, trade-offs, phasing decisions |
 | Session logging | Scribe | Automatic — never needs routing |
 
 ## Issue Routing
@@ -26,6 +28,7 @@ How to decide who handles what.
 | `squad:shallan` | UI, dashboard, frontend components | Shallan |
 | `squad:navani` | Database, data pipelines, caching | Navani |
 | `squad:jasnah` | Testing, quality, verification | Jasnah |
+| `squad:adolin` | Requirements, PRDs, research, ideation | Adolin |
 
 ### How Issue Assignment Works
 
