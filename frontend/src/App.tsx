@@ -1,123 +1,83 @@
-const marketCards = [
-  {
-    label: 'S&P 500',
-    value: '5,214.36',
-    change: '+1.24%',
-    statusClassName: 'status-gain',
-  },
-  {
-    label: 'NASDAQ',
-    value: '18,101.42',
-    change: '+0.82%',
-    statusClassName: 'status-gain',
-  },
-  {
-    label: 'Watchlist Alerts',
-    value: '3 active',
-    change: 'Latency 120ms',
-    statusClassName: 'status-warning',
-  },
-] as const
+import { PanelFrame } from '@/components/shell/PanelFrame'
+import { DashboardLayout } from '@/layouts/DashboardLayout'
 
-const watchlistRows = [
-  {
-    symbol: 'MSFT',
-    price: '$429.18',
-    change: '+1.12%',
-    statusClassName: 'status-gain',
-  },
-  {
-    symbol: 'NVDA',
-    price: '$1,021.77',
-    change: '+2.43%',
-    statusClassName: 'status-gain',
-  },
-  {
-    symbol: 'TSLA',
-    price: '$176.03',
-    change: '-0.94%',
-    statusClassName: 'status-loss',
-  },
-] as const
+const watchlistItems = ['Core names', 'Portfolio movers', 'Earnings radar'] as const
+const newsFeedItems = ['Macro headlines', 'Company updates', 'Analyst notes'] as const
 
 export const App = () => {
   return (
-    <main className="app-shell min-h-screen bg-app text-text-primary">
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-5 lg:px-6">
-        <header className="panel-surface flex flex-col gap-4 rounded-2xl px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1">
-            <p className="data-label">financePortal</p>
-            <h1 className="text-2xl font-semibold tracking-tight text-text-primary">Market dashboard shell</h1>
-            <p className="text-sm text-text-secondary">
-              Tailwind token plumbing now mirrors Renarin&apos;s dark theme spec.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {marketCards.map((card) => (
-              <section key={card.label} className="panel-surface-elevated min-w-40 rounded-xl px-4 py-3">
-                <p className="data-label">{card.label}</p>
-                <p className="mt-2 text-xl font-semibold text-text-primary">{card.value}</p>
-                <p className={`mt-1 ${card.statusClassName}`}>{card.change}</p>
-              </section>
-            ))}
-          </div>
-        </header>
-
-        <section className="grid flex-1 gap-4 lg:grid-cols-[18rem_minmax(0,1fr)_20rem]">
-          <aside className="panel-surface rounded-2xl p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-text-primary">Watchlist</h2>
-              <span className="rounded-full bg-surface-3 px-2 py-1 text-xs text-text-secondary">Tech</span>
+    <DashboardLayout
+      leftPanel={
+        <PanelFrame
+          as="aside"
+          title="Watchlist"
+          eyebrow="Left rail"
+          actions={<span className="rounded-full bg-surface-3 px-2 py-1 text-xs text-text-secondary">~280px</span>}
+        >
+          <div className="space-y-3">
+            <div className="rounded-xl border border-dashed border-border-strong bg-canvas px-3 py-3 text-sm text-text-secondary">
+              Watchlist widgets land here next. The shell keeps navigation visible while feature work catches up.
             </div>
-            <div className="divide-y divide-border-subtle overflow-hidden rounded-xl border border-border-subtle bg-canvas">
-              {watchlistRows.map((row) => (
-                <article key={row.symbol} className="flex items-center justify-between px-3 py-3 hover:bg-surface-hover">
-                  <div>
-                    <p className="text-sm font-semibold text-text-primary">{row.symbol}</p>
-                    <p className="text-xs text-text-muted">US Equity</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="data-value">{row.price}</p>
-                    <p className={row.statusClassName}>{row.change}</p>
-                  </div>
+            <div className="space-y-2">
+              {watchlistItems.map((item) => (
+                <article key={item} className="panel-surface-elevated rounded-xl border border-border-subtle px-3 py-3">
+                  <p className="text-sm font-medium text-text-primary">{item}</p>
+                  <p className="mt-1 text-xs text-text-muted">Placeholder row group for instruments, last price, and change.</p>
                 </article>
               ))}
             </div>
-          </aside>
-
-          <section className="panel-muted rounded-2xl border border-border-grid p-4">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="data-label">Chart canvas</p>
-                <h2 className="text-lg font-semibold text-text-primary">AAPL · 1D</h2>
+          </div>
+        </PanelFrame>
+      }
+      centerPanel={
+        <PanelFrame
+          title="Chart"
+          eyebrow="Center canvas"
+          variant="canvas"
+          actions={<span className="rounded-full bg-accent/16 px-2 py-1 text-xs font-medium text-accent">Flex grow</span>}
+        >
+          <div className="flex h-full min-h-[28rem] flex-col gap-3">
+            <section className="panel-surface rounded-xl border border-border-subtle px-3 py-3">
+              <p className="data-label">Chart header</p>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-base font-semibold text-text-primary">Chart workspace placeholder</h3>
+                <div className="flex flex-wrap gap-2 text-xs text-text-secondary">
+                  <span className="rounded-full bg-surface-3 px-2 py-1">1D</span>
+                  <span className="rounded-full bg-surface-3 px-2 py-1">1W</span>
+                  <span className="rounded-full bg-surface-3 px-2 py-1">1M</span>
+                </div>
               </div>
-              <div className="rounded-full bg-accent/16 px-3 py-1 text-xs font-medium text-accent">Live</div>
+            </section>
+            <section className="flex min-h-[22rem] flex-1 items-center justify-center rounded-xl border border-dashed border-border-strong bg-surface-1 px-4 text-center text-sm text-text-secondary">
+              Chart
+            </section>
+            <section className="panel-surface rounded-xl border border-border-subtle px-3 py-3 text-sm text-text-secondary">
+              Lower module slot reserved for follow-on issues like alerts, indicators, or AI context.
+            </section>
+          </div>
+        </PanelFrame>
+      }
+      rightPanel={
+        <PanelFrame
+          as="aside"
+          title="News Feed"
+          eyebrow="Right rail"
+          actions={<span className="rounded-full bg-surface-3 px-2 py-1 text-xs text-text-secondary">~320px</span>}
+        >
+          <div className="space-y-3">
+            <div className="rounded-xl border border-dashed border-border-strong bg-canvas px-3 py-3 text-sm text-text-secondary">
+              News and alerts stay visible here without overpowering the chart canvas.
             </div>
-            <div className="flex h-full min-h-72 items-center justify-center rounded-xl border border-dashed border-text-muted/40 bg-surface-1 text-sm text-text-secondary">
-              Shared surface, border, and semantic status tokens are ready for chart, watchlist, and alert views.
-            </div>
-          </section>
-
-          <aside className="panel-surface rounded-2xl p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-text-primary">Signals</h2>
-              <span className="status-info">3 new</span>
-            </div>
-            <div className="space-y-3">
-              <article className="panel-surface-elevated rounded-xl px-4 py-3">
-                <p className="data-label">Breaking news</p>
-                <p className="mt-2 text-sm text-text-primary">NVDA suppliers raise guidance after AI demand spike.</p>
-                <p className="mt-2 status-gain">Positive sentiment</p>
+            {newsFeedItems.map((item) => (
+              <article key={item} className="panel-surface-elevated rounded-xl border border-border-subtle px-3 py-3">
+                <p className="data-label">News Feed</p>
+                <p className="mt-2 text-sm font-medium text-text-primary">{item}</p>
+                <p className="mt-1 text-xs text-text-muted">Placeholder card for headlines, source metadata, and sentiment tags.</p>
               </article>
-              <article className="panel-surface-elevated rounded-xl px-4 py-3">
-                <p className="data-label">Alert queue</p>
-                <p className="mt-2 text-sm text-text-primary">Three rules triggered in the last 15 minutes.</p>
-                <p className="mt-2 status-warning">Review recommended</p>
-              </article>
-            </div>
-          </aside>
-        </section>
-      </div>
-    </main>
+            ))}
+          </div>
+        </PanelFrame>
+      }
+    />
   )
 }
