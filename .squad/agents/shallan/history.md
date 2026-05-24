@@ -16,3 +16,5 @@
 - The frontend uses an `@/` path alias that maps to `frontend/src/`.
 - React Query is wired at the app entry point from the initial scaffold, and the Vite dev server proxies `/api` requests to `http://localhost:8000`.
 - 2026-05-24T19:51:02Z — Team update: Renarin design spec complete (HTML conversion in progress), Kaladin backend ready, Adolin backlog ready. Frontend scaffold dependencies materializing. Await Renarin HTML + Phase 1 verification.
+- 2026-05-24T12:51:37-07:00 — Dashboard symbol coordination now lives in `frontend/src/hooks/useSelectedSymbol.ts`, and both watchlist selection plus future symbol-driven panels are expected to read/write the same global context.
+- 2026-05-24T12:51:37-07:00 — The dashboard’s live market UI is split between `frontend/src/components/watchlist/` for tabbed watchlists + per-row quote polling and `frontend/src/components/chart/` for the Lightweight Charts candlestick/volume workspace driven by shared range-aware price helpers in `frontend/src/utils/marketData.ts`.

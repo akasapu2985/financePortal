@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Watchlist and chart dashboard panels in `frontend/src/components/watchlist/`, `frontend/src/components/chart/`, `frontend/src/hooks/useSelectedSymbol.ts`, and `frontend/src/utils/marketData.ts`, including shared selected-symbol context, live quote rows, time-range controls, and a TradingView Lightweight Charts candlestick + volume canvas
 - Typed frontend API service wrappers in `frontend/src/services/api.ts` and `frontend/src/services/types.ts`, including centralized axios config, normalized response models, and structured `ApiClientError` handling for market data and watchlist CRUD
 - React Query async-state plumbing in `frontend/src/providers/QueryProvider.tsx`, `frontend/src/hooks/queries/useMarketData.ts`, and `frontend/src/main.tsx`, with market-aware stale times, polling defaults, retry backoff, and reusable query keys/hooks
 - Dashboard shell layout in `frontend/src/layouts/DashboardLayout.tsx`, `frontend/src/components/shell/TopBar.tsx`, `frontend/src/components/shell/PanelFrame.tsx`, and `frontend/src/App.tsx`, with a spec-aligned top bar plus left watchlist, center chart, and right news placeholder panels
