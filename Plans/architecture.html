@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>financePortal — Architecture Document</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --border: #0f3460;
+      --accent: #e94560;
+      --text: #eaeaea;
+      --muted: #a0a0b0;
+      --success: #4ecdc4;
+      --warning: #f39c12;
+      --code-bg: #0d1117;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { color: var(--accent); font-size: 2.2rem; margin-bottom: 0.5rem; }
+    h2 { color: var(--success); font-size: 1.6rem; margin-top: 2.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    h3 { color: var(--warning); font-size: 1.2rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    p { margin-bottom: 1rem; }
+    ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.4rem; }
+    code {
+      background: var(--code-bg);
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    pre {
+      background: var(--code-bg);
+      padding: 1rem 1.5rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    pre code { padding: 0; background: none; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+    }
+    th, td {
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    th { background: var(--surface); color: var(--success); }
+    .callout {
+      background: var(--surface);
+      border-left: 4px solid var(--accent);
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-info { border-left-color: var(--success); }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-free { background: #1b4332; color: #95d5b2; }
+    .badge-phase { background: #1a1a4e; color: #a0a0ff; }
+    .diagram {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      font-family: 'Cascadia Code', monospace;
+      font-size: 0.85rem;
+      white-space: pre;
+      overflow-x: auto;
+      line-height: 1.4;
+    }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+
+<h1>⚡ financePortal — Architecture Document</h1>
+<p class="meta">
+  Version: 1.0 &nbsp;|&nbsp; Author: Jarvis + Giakas &nbsp;|&nbsp; Created: 2026-05-24 &nbsp;|&nbsp; Status: Approved
+</p>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>1. Project Overview</h2>
+
+<p>
+  A <strong>personal financial intelligence platform</strong> that continuously gathers market data, news, 
+  sentiment, and regulatory filings from free sources across the internet. It stores everything locally in 
+  PostgreSQL, serves a fast dark-mode dashboard via React, and sends Telegram notifications for critical events.
+</p>
+
+<p>
+  This is <em>not</em> a product or startup — it's a highly customized personal system for better market 
+  awareness, faster reaction to developments, and improved investment decision-making.
+</p>
+
+<div class="callout callout-info">
+  <strong>Key Principle:</strong> AI handles analysis and summarization only. Data collection is done through 
+  APIs, scrapers, and scheduled jobs — no AI in the critical data path.
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>2. System Architecture</h2>
+
+<div class="diagram">
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         DATA SOURCES (Free)                              │
+│  Yahoo Finance │ Finnhub │ SEC EDGAR │ RSS │ Reddit/X │ Capitol Trades  │
+└───────┬─────────────┬──────────┬────────┬────────┬──────────┬───────────┘
+        │             │          │        │        │          │
+        ▼             ▼          ▼        ▼        ▼          ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     COLLECTOR PROCESS (Python + APScheduler)             │
+│                                                                         │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐ │
+│  │ Price    │ │ News     │ │ Filings  │ │ Sentiment│ │ Insider/     │ │
+│  │ Collector│ │ Collector│ │ Collector│ │ Collector│ │ Politician   │ │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └──────┬───────┘ │
+└───────┼─────────────┼──────────┼────────┼──────────────────┼───────────┘
+        │             │          │        │                  │
+        ▼             ▼          ▼        ▼                  ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│              POSTGRESQL + TimescaleDB (Local Storage)                    │
+│                                                                         │
+│  prices (hypertable) │ news │ filings │ sentiment │ alerts │ watchlists │
+└───────────────────────────────┬─────────────────────────────────────────┘
+                                │
+              ┌─────────────────┼─────────────────┐
+              ▼                 ▼                  ▼
+┌──────────────────┐ ┌──────────────────┐ ┌──────────────────────┐
+│   FastAPI Server │ │  Event Detection │ │  AI Analysis Layer   │
+│   (REST API)     │ │  Engine          │ │  (DeepSeek/OpenRouter)│
+│                  │ │                  │ │                      │
+│  Serves dashboard│ │  Price drops     │ │  Daily summaries     │
+│  data via JSON   │ │  Volume spikes   │ │  Alert tuning        │
+│                  │ │  News triggers   │ │  Pattern detection   │
+└────────┬─────────┘ └────────┬─────────┘ └──────────────────────┘
+         │                    │
+         ▼                    ▼
+┌──────────────────┐ ┌──────────────────┐
+│  React Dashboard │ │  Telegram Bot    │
+│  (Vite + TV Charts)│ │  (One-way push)  │
+│                  │ │                  │
+│  Dark mode       │ │  3-tier alerts:  │
+│  Multi-panel     │ │  🔴 Critical     │
+│  Command center  │ │  🟡 Important    │
+└──────────────────┘ │  🟢 Info         │
+                     └──────────────────┘
+
+         ┌─────────────────────────────┐
+         │   MCP Server (Phase 6)      │
+         │   SSE/HTTP + Bearer Token   │
+         │   Read + Write access       │
+         │                             │
+         │   → Hermes Agent queries    │
+         │   → External AI integration │
+         └─────────────────────────────┘
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>3. Tech Stack</h2>
+
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Notes</th></tr>
+  <tr><td>Database</td><td>PostgreSQL 16 + TimescaleDB</td><td>Docker Compose, local volume</td></tr>
+  <tr><td>Backend API</td><td>Python 3.12 + FastAPI</td><td>Async, auto OpenAPI docs</td></tr>
+  <tr><td>Data Collection</td><td>Python + APScheduler</td><td>Separate process from API</td></tr>
+  <tr><td>Frontend</td><td>Vite + React 18 + TypeScript</td><td>SPA, dark mode</td></tr>
+  <tr><td>Charts</td><td>TradingView Lightweight Charts</td><td>Candlesticks, volume, indicators</td></tr>
+  <tr><td>Notifications</td><td>python-telegram-bot</td><td>One-way push</td></tr>
+  <tr><td>AI</td><td>DeepSeek Flash via OpenRouter</td><td>Analysis, summaries, alert tuning</td></tr>
+  <tr><td>MCP Server</td><td>Python, SSE/HTTP transport</td><td>Bearer token auth, Phase 6</td></tr>
+  <tr><td>Package Mgmt</td><td>uv (Python), pnpm (JS/TS)</td><td>Fast, lockfile support</td></tr>
+  <tr><td>Infrastructure</td><td>Docker Compose (Postgres only)</td><td>App runs natively</td></tr>
+</table>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>4. Data Sources</h2>
+
+<table>
+  <tr><th>Source</th><th>Data Type</th><th>Method</th><th>Frequency</th><th>Cost</th></tr>
+  <tr><td>Yahoo Finance (yfinance)</td><td>Prices, fundamentals, historical</td><td>Python library</td><td>Every 1-5 min (market hours)</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>Finnhub</td><td>News, earnings, company events</td><td>REST API</td><td>Every 2-5 min</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>SEC EDGAR</td><td>Filings, insider trades (Form 4)</td><td>REST API + RSS</td><td>Every 30 min</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>RSS Feeds</td><td>Financial news (Reuters, MW, SA)</td><td>feedparser</td><td>Every 5 min</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>Capitol Trades / Quiver Quant</td><td>Politician stock trades</td><td>Scraping / API</td><td>Every 6 hours</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>Reddit (r/wallstreetbets, etc.)</td><td>Sentiment, mentions</td><td>Reddit API (free tier)</td><td>Every 15 min</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>X/Twitter</td><td>Sentiment, breaking news</td><td>Scraping / Nitter</td><td>Every 15 min</td><td><span class="badge badge-free">FREE</span></td></tr>
+</table>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>5. Database Schema (High-Level)</h2>
+
+<h3>5.1 Core Tables</h3>
+<pre><code>-- Instruments being tracked
+CREATE TABLE instruments (
+    id          SERIAL PRIMARY KEY,
+    symbol      VARCHAR(10) UNIQUE NOT NULL,
+    name        VARCHAR(255),
+    type        VARCHAR(10) DEFAULT 'stock',  -- stock, etf
+    sector      VARCHAR(100),
+    is_owned    BOOLEAN DEFAULT FALSE,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Watchlists
+CREATE TABLE watchlists (
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE watchlist_items (
+    watchlist_id  INT REFERENCES watchlists(id),
+    instrument_id INT REFERENCES instruments(id),
+    added_at      TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (watchlist_id, instrument_id)
+);</code></pre>
+
+<h3>5.2 Time-Series (TimescaleDB Hypertables)</h3>
+<pre><code>-- Intraday prices (retain 14 days)
+CREATE TABLE prices_intraday (
+    time        TIMESTAMPTZ NOT NULL,
+    symbol      VARCHAR(10) NOT NULL,
+    open        NUMERIC(12,4),
+    high        NUMERIC(12,4),
+    low         NUMERIC(12,4),
+    close       NUMERIC(12,4),
+    volume      BIGINT
+);
+SELECT create_hypertable('prices_intraday', 'time');
+
+-- Daily candles (retain 1 year)
+CREATE TABLE prices_daily (
+    time        TIMESTAMPTZ NOT NULL,
+    symbol      VARCHAR(10) NOT NULL,
+    open        NUMERIC(12,4),
+    high        NUMERIC(12,4),
+    low         NUMERIC(12,4),
+    close       NUMERIC(12,4),
+    volume      BIGINT
+);
+SELECT create_hypertable('prices_daily', 'time');</code></pre>
+
+<h3>5.3 Events & News (JSONB for flexibility)</h3>
+<pre><code>-- News articles (retain 15 days)
+CREATE TABLE news (
+    id          SERIAL PRIMARY KEY,
+    symbol      VARCHAR(10),
+    source      VARCHAR(50),
+    title       TEXT NOT NULL,
+    summary     TEXT,
+    url         TEXT,
+    metadata    JSONB,
+    published_at TIMESTAMPTZ,
+    fetched_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- SEC filings
+CREATE TABLE filings (
+    id          SERIAL PRIMARY KEY,
+    symbol      VARCHAR(10),
+    form_type   VARCHAR(20),
+    filer_name  VARCHAR(255),
+    data        JSONB,
+    filed_at    TIMESTAMPTZ,
+    fetched_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Sentiment scores
+CREATE TABLE sentiment (
+    id          SERIAL PRIMARY KEY,
+    symbol      VARCHAR(10),
+    source      VARCHAR(50),
+    score       NUMERIC(5,3),
+    mentions    INT,
+    data        JSONB,
+    measured_at TIMESTAMPTZ DEFAULT NOW()
+);</code></pre>
+
+<h3>5.4 Alerts</h3>
+<pre><code>CREATE TABLE alerts (
+    id          SERIAL PRIMARY KEY,
+    symbol      VARCHAR(10),
+    type        VARCHAR(50),       -- price_drop, volume_spike, news_trigger, etc.
+    tier        VARCHAR(10),       -- critical, important, info
+    title       TEXT NOT NULL,
+    body        TEXT,
+    data        JSONB,
+    is_read     BOOLEAN DEFAULT FALSE,
+    notified_at TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE alert_rules (
+    id          SERIAL PRIMARY KEY,
+    symbol      VARCHAR(10),       -- NULL = applies to all
+    type        VARCHAR(50) NOT NULL,
+    tier        VARCHAR(10) NOT NULL,
+    config      JSONB NOT NULL,    -- thresholds, conditions
+    enabled     BOOLEAN DEFAULT TRUE,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);</code></pre>
+
+<h3>5.5 Retention Policies</h3>
+<pre><code>-- TimescaleDB automatic data retention
+SELECT add_retention_policy('prices_intraday', INTERVAL '14 days');
+SELECT add_retention_policy('prices_daily', INTERVAL '1 year');
+
+-- Manual cleanup job for non-hypertables (run daily)
+-- DELETE FROM news WHERE fetched_at < NOW() - INTERVAL '15 days';
+-- DELETE FROM sentiment WHERE measured_at < NOW() - INTERVAL '15 days';</code></pre>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>6. Repository Structure</h2>
+
+<pre><code>financePortal/
+├── Plans/                    # Architecture docs & plans (HTML)
+├── docker-compose.yml        # PostgreSQL + TimescaleDB
+├── .env.example              # Environment variable template
+├── start.ps1                 # One-command startup script
+│
+├── backend/                  # Python backend (monorepo package)
+│   ├── pyproject.toml        # uv/pip config
+│   ├── src/
+│   │   ├── api/              # FastAPI application
+│   │   │   ├── main.py       # App entry point
+│   │   │   ├── routers/      # Route modules (prices, news, watchlists, alerts)
+│   │   │   └── models/       # Pydantic response models
+│   │   │
+│   │   ├── collectors/       # Data collection jobs
+│   │   │   ├── scheduler.py  # APScheduler config
+│   │   │   ├── prices.py     # Yahoo Finance price collector
+│   │   │   ├── news.py       # Finnhub + RSS news collector
+│   │   │   ├── filings.py    # SEC EDGAR collector
+│   │   │   ├── sentiment.py  # Reddit/X sentiment collector
+│   │   │   └── insider.py    # Insider + politician trade collector
+│   │   │
+│   │   ├── detection/        # Event detection engine
+│   │   │   ├── engine.py     # Main detection loop
+│   │   │   └── rules.py      # Rule evaluation logic
+│   │   │
+│   │   ├── notifications/    # Telegram + alert dispatch
+│   │   │   ├── telegram.py
+│   │   │   └── dispatcher.py
+│   │   │
+│   │   ├── ai/               # AI analysis layer (Phase 5)
+│   │   │   ├── client.py     # OpenRouter/DeepSeek client
+│   │   │   ├── analysis.py   # Daily analysis jobs
+│   │   │   └── prompts.py    # Prompt templates
+│   │   │
+│   │   ├── mcp/              # MCP server (Phase 6)
+│   │   │   ├── server.py
+│   │   │   └── tools.py      # MCP tool definitions
+│   │   │
+│   │   └── db/               # Database utilities
+│   │       ├── connection.py
+│   │       ├── migrations/   # SQL migration files
+│   │       └── queries.py    # Common query helpers
+│   │
+│   └── tests/
+│
+├── frontend/                 # React dashboard
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── index.html
+│   └── src/
+│       ├── App.tsx
+│       ├── components/
+│       │   ├── layout/       # Shell, panels, navigation
+│       │   ├── charts/       # TradingView chart wrappers
+│       │   ├── watchlist/    # Watchlist components
+│       │   ├── news/         # News feed components
+│       │   └── alerts/       # Alert display components
+│       ├── hooks/            # Custom React hooks
+│       ├── services/         # API client layer
+│       └── types/            # TypeScript type definitions
+│
+├── .squad/                   # Squad team config (existing)
+├── .github/                  # GitHub workflows (existing)
+└── CHANGELOG.md</code></pre>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>7. Update Frequencies</h2>
+
+<table>
+  <tr><th>Collector</th><th>Market Hours</th><th>Off Hours</th><th>Notes</th></tr>
+  <tr><td>Prices (intraday)</td><td>Every 2 min</td><td>Off</td><td>Yahoo Finance, batch 50-100 symbols</td></tr>
+  <tr><td>Prices (daily candle)</td><td>Once at close</td><td>—</td><td>End-of-day summary</td></tr>
+  <tr><td>News (Finnhub + RSS)</td><td>Every 3 min</td><td>Every 15 min</td><td>Rate-limit aware</td></tr>
+  <tr><td>SEC EDGAR filings</td><td>Every 30 min</td><td>Every 2 hrs</td><td>Low volume source</td></tr>
+  <tr><td>Sentiment (Reddit/X)</td><td>Every 15 min</td><td>Every 30 min</td><td>Aggregate scores</td></tr>
+  <tr><td>Insider/Politician trades</td><td>Every 6 hrs</td><td>Every 6 hrs</td><td>Infrequent updates</td></tr>
+  <tr><td>Event detection</td><td>Every 1 min</td><td>Every 5 min</td><td>Checks DB for trigger conditions</td></tr>
+  <tr><td>AI analysis</td><td>2x daily</td><td>—</td><td>Morning + evening via DeepSeek</td></tr>
+</table>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>8. Alert Tiers</h2>
+
+<table>
+  <tr><th>Tier</th><th>Channel</th><th>Latency</th><th>Examples</th></tr>
+  <tr>
+    <td>🔴 Critical</td>
+    <td>Telegram immediately</td>
+    <td>&lt; 2 min</td>
+    <td>Stop-loss approached, 5%+ drop on owned stock, breaking M&amp;A, large insider sell on your position</td>
+  </tr>
+  <tr>
+    <td>🟡 Important</td>
+    <td>Telegram batched (every 30 min)</td>
+    <td>&lt; 30 min</td>
+    <td>Analyst upgrade/downgrade, politician trade on watchlist, unusual volume (3x+), sentiment spike</td>
+  </tr>
+  <tr>
+    <td>🟢 Informational</td>
+    <td>Dashboard only</td>
+    <td>Next page load</td>
+    <td>General news, minor moves, daily summaries, new SEC filings</td>
+  </tr>
+</table>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>9. Dashboard Layout</h2>
+
+<div class="diagram">
+┌─────────────────────────────────────────────────────────────────────┐
+│  🔍 Search    │  S&P: +0.4%  │  NASDAQ: -0.2%  │  Portfolio: +$1,234  │
+├───────────────┼─────────────────────────────────┼───────────────────┤
+│               │                                 │                   │
+│  PORTFOLIO    │         MAIN CHART              │   EVENT FEED      │
+│  ───────────  │      (TradingView)              │   ───────────     │
+│  AAPL  +1.2%  │                                 │   🔴 TSLA -6.2%  │
+│  MSFT  -0.3%  │   ┌─────────────────────┐      │   🟡 AAPL upgrade│
+│  GOOGL +0.8%  │   │                     │      │   🟢 Fed minutes  │
+│               │   │   Candlestick +     │      │   🟡 Unusual vol  │
+│  WATCHLIST    │   │   Volume chart       │      │   🟢 MSFT earnings│
+│  ───────────  │   │                     │      │                   │
+│  NVDA  +2.1%  │   └─────────────────────┘      │   ─── 30m ago ─── │
+│  AMD   -1.4%  │                                 │   🟢 Reddit spike │
+│  TSLA  -6.2%  │   [1D] [1W] [1M] [3M] [1Y]    │   🟢 SEC filing   │
+│               │                                 │                   │
+└───────────────┴─────────────────────────────────┴───────────────────┘
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>10. Portability & Deployment</h2>
+
+<ul>
+  <li><strong>Development:</strong> Current laptop. All code in this repo.</li>
+  <li><strong>Production:</strong> Desktop PC. Clone repo, run <code>docker compose up -d</code> for Postgres, run <code>start.ps1</code> for the app.</li>
+  <li><strong>.env file:</strong> All secrets (Telegram token, API keys, OpenRouter key) in <code>.env</code> — never committed.</li>
+  <li><strong>.env.example:</strong> Committed template showing required variables.</li>
+  <li><strong>No backup needed:</strong> Data is re-fetchable. Postgres is ephemeral cache + recent history.</li>
+  <li><strong>MCP/Hermes:</strong> Phase 6, built on desktop machine where Hermes is installed.</li>
+</ul>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>11. Key Design Decisions</h2>
+
+<div class="callout">
+  <strong>Decision Log</strong>
+  <ol>
+    <li><strong>Free data only</strong> — no paid APIs for data collection. AI usage (OpenRouter) is the only cost.</li>
+    <li><strong>Separate processes</strong> — API server never blocked by collectors. Dashboard always fast.</li>
+    <li><strong>TimescaleDB</strong> — automatic retention, compression, fast time-range queries.</li>
+    <li><strong>Hybrid schema</strong> — relational for structured data, JSONB for messy/variable sources.</li>
+    <li><strong>AI is advisory only</strong> — it summarizes and suggests, never collects or acts autonomously.</li>
+    <li><strong>MCP is Phase 6</strong> — build the platform first, agent integration second.</li>
+    <li><strong>One-way Telegram</strong> — bot pushes alerts, Hermes handles two-way conversation later.</li>
+    <li><strong>Monorepo</strong> — everything in one repo for simplicity and portability.</li>
+  </ol>
+</div>
+
+</body>
+</html>

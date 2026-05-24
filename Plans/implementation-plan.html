@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>financePortal — Implementation Plan</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --border: #0f3460;
+      --accent: #e94560;
+      --text: #eaeaea;
+      --muted: #a0a0b0;
+      --success: #4ecdc4;
+      --warning: #f39c12;
+      --code-bg: #0d1117;
+      --phase1: #4ecdc4;
+      --phase2: #a78bfa;
+      --phase3: #f97316;
+      --phase4: #06b6d4;
+      --phase5: #ec4899;
+      --phase6: #84cc16;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { color: var(--accent); font-size: 2.2rem; margin-bottom: 0.5rem; }
+    h2 { color: var(--success); font-size: 1.6rem; margin-top: 2.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    h3 { color: var(--warning); font-size: 1.2rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    p { margin-bottom: 1rem; }
+    ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.4rem; }
+    code {
+      background: var(--code-bg);
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    pre {
+      background: var(--code-bg);
+      padding: 1rem 1.5rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    pre code { padding: 0; background: none; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+    th, td { padding: 0.6rem 1rem; border: 1px solid var(--border); text-align: left; }
+    th { background: var(--surface); color: var(--success); }
+    .callout {
+      background: var(--surface);
+      border-left: 4px solid var(--accent);
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .phase-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .phase-card h3 {
+      margin-top: 0;
+      font-size: 1.3rem;
+    }
+    .phase-1 h3 { color: var(--phase1); }
+    .phase-2 h3 { color: var(--phase2); }
+    .phase-3 h3 { color: var(--phase3); }
+    .phase-4 h3 { color: var(--phase4); }
+    .phase-5 h3 { color: var(--phase5); }
+    .phase-6 h3 { color: var(--phase6); }
+    .task-list { list-style: none; margin-left: 0; }
+    .task-list li { padding: 0.3rem 0; padding-left: 1.5rem; position: relative; }
+    .task-list li::before {
+      content: "☐";
+      position: absolute;
+      left: 0;
+    }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    .dep { color: var(--muted); font-style: italic; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<h1>⚡ financePortal — Implementation Plan</h1>
+<p class="meta">
+  Version: 1.0 &nbsp;|&nbsp; Created: 2026-05-24 &nbsp;|&nbsp; Status: Ready to Execute
+</p>
+
+<div class="callout">
+  <strong>Execution Strategy:</strong> Build in phases. Each phase produces a working, testable system. 
+  No phase depends on AI or external services that aren't built yet. The system works standalone from Phase 1 onward.
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<h2>Phase 1 — Foundation (Get Data Flowing)</h2>
+
+<div class="phase-card phase-1">
+  <h3>🏗️ Infrastructure + Core Data Pipeline</h3>
+  <p>Goal: PostgreSQL running, schema created, price data flowing in, basic API serving it.</p>
+
+  <h3>Tasks</h3>
+  <ul class="task-list">
+    <li>Create <code>docker-compose.yml</code> with PostgreSQL 16 + TimescaleDB image</li>
+    <li>Create <code>.env.example</code> with all required environment variables</li>
+    <li>Set up Python project with <code>uv</code> — <code>backend/pyproject.toml</code></li>
+    <li>Create database migration system (simple numbered SQL files)</li>
+    <li>Write initial migration: instruments, watchlists, prices_intraday, prices_daily tables</li>
+    <li>Write second migration: news, filings, sentiment, alerts, alert_rules tables</li>
+    <li>Build <code>db/connection.py</code> — async connection pool (asyncpg)</li>
+    <li>Build Yahoo Finance price collector (<code>collectors/prices.py</code>)</li>
+    <li>Build Finnhub news collector (<code>collectors/news.py</code>)</li>
+    <li>Build APScheduler runner (<code>collectors/scheduler.py</code>)</li>
+    <li>Build FastAPI app with health check endpoint</li>
+    <li>Build API routes: <code>GET /instruments</code>, <code>GET /prices/{symbol}</code>, <code>GET /news</code></li>
+    <li>Create <code>start.ps1</code> script to launch Postgres + API + Collector</li>
+    <li>Add seed data: initial watchlist with ~10-20 stocks for testing</li>
+    <li>Verify: prices flowing into DB, API responding with real data</li>
+  </ul>
+
+  <h3>Deliverables</h3>
+  <ul>
+    <li>Working Docker Compose stack</li>
+    <li>Python backend collecting prices + news on schedule</li>
+    <li>FastAPI serving data at <code>localhost:8000</code></li>
+    <li>Swagger docs at <code>localhost:8000/docs</code></li>
+  </ul>
+
+  <p class="dep">Dependencies: None. This is the foundation.</p>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<h2>Phase 2 — Dashboard MVP</h2>
+
+<div class="phase-card phase-2">
+  <h3>⚛️ React Dashboard with Live Data</h3>
+  <p>Goal: Open browser, see your stocks, charts, and news feed. Feels fast.</p>
+
+  <h3>Tasks</h3>
+  <ul class="task-list">
+    <li>Scaffold Vite + React + TypeScript project in <code>frontend/</code></li>
+    <li>Install dependencies: TradingView Lightweight Charts, React Query (TanStack), Tailwind CSS</li>
+    <li>Build dark theme + CSS variables system</li>
+    <li>Build shell layout: top bar, left panel, center panel, right panel</li>
+    <li>Build portfolio/watchlist component (left panel) — compact table with day change, sparklines</li>
+    <li>Build TradingView chart wrapper component (center panel) — candlestick + volume</li>
+    <li>Build news/event feed component (right panel) — scrollable, categorized</li>
+    <li>Build top bar: search, market indices, portfolio total value</li>
+    <li>Build API service layer (<code>services/api.ts</code>) — typed fetch wrappers</li>
+    <li>Add React Query for data fetching with polling (refetch every 30s)</li>
+    <li>Build watchlist CRUD: add/remove stocks, create new watchlists</li>
+    <li>Add time range selector for charts (1D, 1W, 1M, 3M, 1Y)</li>
+    <li>Responsive behavior: panels collapse on smaller screens</li>
+    <li>Verify: dashboard loads in &lt;1s, charts render smoothly, data updates live</li>
+  </ul>
+
+  <h3>Deliverables</h3>
+  <ul>
+    <li>Full command-center dashboard at <code>localhost:3000</code></li>
+    <li>Interactive charts with real market data</li>
+    <li>Watchlist management</li>
+    <li>Auto-refreshing data</li>
+  </ul>
+
+  <p class="dep">Dependencies: Phase 1 (API must be serving data)</p>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<h2>Phase 3 — Alerts & Notifications</h2>
+
+<div class="phase-card phase-3">
+  <h3>🔔 Event Detection + Telegram Alerts</h3>
+  <p>Goal: System detects important events and pushes notifications to your phone.</p>
+
+  <h3>Tasks</h3>
+  <ul class="task-list">
+    <li>Build event detection engine (<code>detection/engine.py</code>) — runs on schedule, queries DB for trigger conditions</li>
+    <li>Implement detection rules: price drop ≥5%, volume spike ≥3x avg, stop-loss proximity</li>
+    <li>Implement news-based triggers: keyword matching, breaking news detection</li>
+    <li>Build alert dispatch system (<code>notifications/dispatcher.py</code>) — routes alerts to correct tier/channel</li>
+    <li>Build Telegram integration (<code>notifications/telegram.py</code>) — format messages nicely with emoji/links</li>
+    <li>Implement batching for 🟡 Important tier (aggregate every 30 min)</li>
+    <li>Add alert_rules table management API (CRUD for custom rules)</li>
+    <li>Build alerts panel in dashboard — show recent alerts, mark as read</li>
+    <li>Add alert badge/indicator to watchlist items when they have active alerts</li>
+    <li>Create Telegram bot via BotFather, document setup steps</li>
+    <li>Verify: trigger a test alert, see it arrive on Telegram within 2 min</li>
+  </ul>
+
+  <h3>Deliverables</h3>
+  <ul>
+    <li>Automatic event detection running continuously</li>
+    <li>Telegram notifications for critical + important alerts</li>
+    <li>Alert management in dashboard</li>
+    <li>Configurable alert rules</li>
+  </ul>
+
+  <p class="dep">Dependencies: Phase 1 (data in DB), Phase 2 (dashboard for alert UI)</p>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<h2>Phase 4 — Extended Data Sources</h2>
+
+<div class="phase-card phase-4">
+  <h3>📡 More Intelligence, More Sources</h3>
+  <p>Goal: Broaden the intelligence net — insider trades, politician disclosures, sentiment from social media.</p>
+
+  <h3>Tasks</h3>
+  <ul class="task-list">
+    <li>Build SEC EDGAR collector (<code>collectors/filings.py</code>) — Form 4 (insider trades), 8-K (major events)</li>
+    <li>Build politician trade collector (<code>collectors/insider.py</code>) — Capitol Trades or Quiver Quant scraping</li>
+    <li>Build Reddit sentiment collector (<code>collectors/sentiment.py</code>) — r/wallstreetbets, r/stocks mention counts + tone</li>
+    <li>Build X/Twitter sentiment collector — trending $cashtags, breaking news accounts</li>
+    <li>Add RSS feed aggregator — Reuters, MarketWatch, Seeking Alpha, Benzinga</li>
+    <li>Normalize all sources into common event format for detection engine</li>
+    <li>Add new detection rules: insider sell &gt;$1M, politician trade on watchlist stock, sentiment spike</li>
+    <li>Enhance dashboard news feed with source categorization and filtering</li>
+    <li>Add sentiment indicator to watchlist items (mini gauge or color)</li>
+    <li>Verify: see insider trades, politician disclosures, sentiment scores flowing in</li>
+  </ul>
+
+  <h3>Deliverables</h3>
+  <ul>
+    <li>5+ active data sources feeding the system</li>
+    <li>Insider + politician trade tracking</li>
+    <li>Social sentiment scoring per stock</li>
+    <li>Richer event detection with more signal types</li>
+  </ul>
+
+  <p class="dep">Dependencies: Phase 1 (schema), Phase 3 (detection engine for new rule types)</p>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<h2>Phase 5 — AI Analysis Layer</h2>
+
+<div class="phase-card phase-5">
+  <h3>🧠 DeepSeek Intelligence</h3>
+  <p>Goal: AI runs 2x daily, summarizes trends, tunes alerts, generates insights you couldn't get manually.</p>
+
+  <h3>Tasks</h3>
+  <ul class="task-list">
+    <li>Build OpenRouter client (<code>ai/client.py</code>) — handles DeepSeek Flash calls, retries, token management</li>
+    <li>Design prompt templates (<code>ai/prompts.py</code>) — morning brief, evening recap, stock deep-dive, alert tuning</li>
+    <li>Build daily analysis job (<code>ai/analysis.py</code>) — queries DB, assembles context, calls AI, stores results</li>
+    <li>Morning brief: portfolio summary, overnight news, key events today, risk flags</li>
+    <li>Evening recap: day performance, notable moves, sentiment changes, what to watch tomorrow</li>
+    <li>Alert tuning: AI reviews recent alert history, suggests threshold adjustments</li>
+    <li>Pattern detection: unusual correlations, sector rotation signals, momentum shifts</li>
+    <li>Store AI outputs in DB (new <code>ai_insights</code> table)</li>
+    <li>Add AI insights panel to dashboard — show latest analysis, recommendations</li>
+    <li>Send morning brief + evening recap via Telegram</li>
+    <li>Verify: receive coherent, useful morning brief on Telegram with real data</li>
+  </ul>
+
+  <h3>Deliverables</h3>
+  <ul>
+    <li>Automated 2x daily AI analysis</li>
+    <li>Morning brief + evening recap on Telegram</li>
+    <li>AI-powered alert tuning suggestions</li>
+    <li>Insights panel in dashboard</li>
+  </ul>
+
+  <p class="dep">Dependencies: Phase 1-4 (needs rich data to analyze), OpenRouter API key</p>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<h2>Phase 6 — MCP Server + Hermes Integration</h2>
+
+<div class="phase-card phase-6">
+  <h3>🔌 Agent Access Layer</h3>
+  <p>Goal: Hermes (or any MCP-compatible agent) can query and interact with the full financial intelligence system.</p>
+
+  <h3>Tasks</h3>
+  <ul class="task-list">
+    <li>Build MCP server (<code>mcp/server.py</code>) — SSE/HTTP transport, bearer token auth</li>
+    <li>Define MCP tools: <code>get_portfolio</code>, <code>get_prices</code>, <code>get_news</code>, <code>get_alerts</code>, <code>get_sentiment</code></li>
+    <li>Define MCP tools (write): <code>add_to_watchlist</code>, <code>create_alert</code>, <code>dismiss_alert</code></li>
+    <li>Define MCP tools (AI): <code>get_latest_analysis</code>, <code>request_stock_deep_dive</code></li>
+    <li>Test with Hermes agent on desktop machine</li>
+    <li>Build Hermes skill definition for financial intelligence queries</li>
+    <li>Configure Hermes → MCP connection (network, auth)</li>
+    <li>Verify: Hermes can ask "How's my portfolio?" and get a real answer</li>
+  </ul>
+
+  <h3>Deliverables</h3>
+  <ul>
+    <li>MCP server running alongside API server</li>
+    <li>Full read+write tool surface for AI agents</li>
+    <li>Hermes connected and querying live data</li>
+  </ul>
+
+  <p class="dep">Dependencies: All previous phases. Executed on desktop machine with Hermes.</p>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<h2>Execution Order & Milestones</h2>
+
+<table>
+  <tr><th>Phase</th><th>Milestone</th><th>You'll Know It's Done When...</th></tr>
+  <tr><td>1</td><td>Data flows</td><td>API returns real AAPL prices from your local DB</td></tr>
+  <tr><td>2</td><td>Dashboard works</td><td>You open the browser and see your portfolio with live charts</td></tr>
+  <tr><td>3</td><td>Alerts fire</td><td>Phone buzzes with a Telegram notification about a stock drop</td></tr>
+  <tr><td>4</td><td>Full intelligence</td><td>Insider trades and Reddit sentiment show up in your feed</td></tr>
+  <tr><td>5</td><td>AI speaks</td><td>Morning brief lands on Telegram with actionable insights</td></tr>
+  <tr><td>6</td><td>Hermes connected</td><td>You ask Hermes "what should I watch today?" and get a smart answer</td></tr>
+</table>
+
+<!-- ─────────────────────────────────────── -->
+<h2>Next Action</h2>
+
+<div class="callout">
+  <strong>Ready to start Phase 1.</strong> First steps:
+  <ol>
+    <li>Create <code>docker-compose.yml</code></li>
+    <li>Create <code>backend/pyproject.toml</code></li>
+    <li>Write database migrations</li>
+    <li>Build the Yahoo Finance price collector</li>
+  </ol>
+  <p>Say the word and we begin building.</p>
+</div>
+
+</body>
+</html>
