@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Dashboard news feed and top bar enhancements in `frontend/src/components/news/NewsFeed.tsx`, `frontend/src/components/shell/TopBar.tsx`, `frontend/src/components/watchlist/WatchlistPanel.tsx`, `frontend/src/hooks/queries/useMarketData.ts`, and `frontend/src/services/api.ts`, including symbol-aware backend news queries, sentiment badges, debounced watchlist search, market indices, and portfolio summary cards
 - Watchlist and chart dashboard panels in `frontend/src/components/watchlist/`, `frontend/src/components/chart/`, `frontend/src/hooks/useSelectedSymbol.ts`, and `frontend/src/utils/marketData.ts`, including shared selected-symbol context, live quote rows, time-range controls, and a TradingView Lightweight Charts candlestick + volume canvas
 - Typed frontend API service wrappers in `frontend/src/services/api.ts` and `frontend/src/services/types.ts`, including centralized axios config, normalized response models, and structured `ApiClientError` handling for market data and watchlist CRUD
 - React Query async-state plumbing in `frontend/src/providers/QueryProvider.tsx`, `frontend/src/hooks/queries/useMarketData.ts`, and `frontend/src/main.tsx`, with market-aware stale times, polling defaults, retry backoff, and reusable query keys/hooks

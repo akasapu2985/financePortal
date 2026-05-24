@@ -4,10 +4,14 @@ import { WatchlistItem } from '@/components/watchlist/WatchlistItem'
 import { useSelectedSymbol } from '@/hooks/useSelectedSymbol'
 import { useInstruments, useWatchlist, useWatchlists } from '@/hooks/queries/useMarketData'
 
+interface WatchlistPanelProps {
+  searchQuery: string
+}
+
 const MAX_VISIBLE_TABS = 5
 const loadingSkeletonRows = Array.from({ length: 6 }, (_, index) => index)
 
-export const WatchlistPanel = () => {
+export const WatchlistPanel = ({ searchQuery }: WatchlistPanelProps) => {
   const { data: watchlists = [], isLoading: isLoadingWatchlists } = useWatchlists()
   const { data: instruments = [] } = useInstruments()
   const { selectedSymbol, setSelectedSymbol } = useSelectedSymbol()
@@ -35,23 +39,37 @@ export const WatchlistPanel = () => {
     }))
   }, [activeWatchlist?.instruments, instrumentNameBySymbol])
 
+  const normalizedSearchQuery = searchQuery.trim().toUpperCase()
+  const filteredWatchlistInstruments = useMemo(() => {
+    if (!normalizedSearchQuery) {
+      return watchlistInstruments
+    }
+
+    return watchlistInstruments.filter((instrument) => {
+      return instrument.symbol.trim().toUpperCase().includes(normalizedSearchQuery)
+    })
+  }, [normalizedSearchQuery, watchlistInstruments])
+
   useEffect(() => {
-    if (selectedSymbol || watchlistInstruments.length === 0) {
+    if (selectedSymbol || filteredWatchlistInstruments.length === 0) {
       return
     }
 
-    setSelectedSymbol(watchlistInstruments[0].symbol)
-  }, [selectedSymbol, setSelectedSymbol, watchlistInstruments])
+    setSelectedSymbol(filteredWatchlistInstruments[0].symbol)
+  }, [filteredWatchlistInstruments, selectedSymbol, setSelectedSymbol])
 
   const isLoadingPanel = isLoadingWatchlists || (activeWatchlistId !== null && isLoadingActiveWatchlist && !activeWatchlist)
   const activeWatchlistCount = activeWatchlist?.instrument_count ?? watchlistInstruments.length
+  const watchlistCountLabel = normalizedSearchQuery
+    ? `${filteredWatchlistInstruments.length}/${activeWatchlistCount} symbols`
+    : `${activeWatchlistCount} symbols`
 
   return (
     <PanelFrame
       as="aside"
       title="Watchlist"
       eyebrow="Left rail"
-      actions={<span className="rounded-full bg-surface-3 px-2 py-1 text-xs text-text-secondary">{activeWatchlistCount} symbols</span>}
+      actions={<span className="rounded-full bg-surface-3 px-2 py-1 text-xs text-text-secondary">{watchlistCountLabel}</span>}
       contentClassName="gap-3 p-3"
     >
       <div className="flex flex-wrap gap-2">
@@ -102,9 +120,13 @@ export const WatchlistPanel = () => {
           <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-border-strong bg-canvas px-4 text-center text-sm text-text-secondary">
             No stocks in watchlist
           </div>
+        ) : filteredWatchlistInstruments.length === 0 ? (
+          <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-border-strong bg-canvas px-4 text-center text-sm text-text-secondary">
+            No symbols match “{normalizedSearchQuery}”
+          </div>
         ) : (
           <div className="space-y-1">
-            {watchlistInstruments.map((instrument) => (
+            {filteredWatchlistInstruments.map((instrument) => (
               <WatchlistItem
                 key={`${activeWatchlistId ?? 'watchlist'}-${instrument.symbol}`}
                 instrument={instrument}

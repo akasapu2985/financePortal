@@ -26,12 +26,15 @@ export interface PriceSeriesResponse {
   daily: PricePoint[]
 }
 
+export type NewsSentiment = 'positive' | 'negative' | 'neutral'
+
 export interface NewsArticle {
   id: number | null
   headline: string
   summary: string | null
   source: string | null
   url: string
+  sentiment: NewsSentiment
   sentiment_score: number | null
   published_at: string | null
   symbol?: string | null
@@ -52,13 +55,6 @@ export interface Watchlist {
 export interface HealthResponse {
   status: string
   database: string
-}
-
-export interface PaginatedResponse<T> {
-  items: T[]
-  page: number
-  limit: number
-  has_more: boolean
 }
 
 export interface ApiErrorShape {

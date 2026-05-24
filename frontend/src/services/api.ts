@@ -4,7 +4,7 @@ import type {
   HealthResponse,
   Instrument,
   NewsArticle,
-  PaginatedResponse,
+  NewsSentiment,
   PriceSeriesResponse,
   PriceTimeRange,
   Watchlist,
@@ -51,10 +51,16 @@ interface ApiErrorResponse {
   code?: string
 }
 
+interface GetNewsParams {
+  symbol?: string | null
+  limit?: number
+}
+
 const DEFAULT_API_BASE_URL = '/api'
 const DEFAULT_API_TIMEOUT_MS = 10_000
-const DEFAULT_NEWS_PAGE = 1
 const DEFAULT_NEWS_LIMIT = 20
+const POSITIVE_NEWS_TERMS = ['beat', 'bullish', 'gain', 'growth', 'record', 'rally', 'surge', 'upgrade']
+const NEGATIVE_NEWS_TERMS = ['bearish', 'cut', 'decline', 'downgrade', 'drop', 'fall', 'lawsuit', 'loss', 'miss', 'slump']
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL
 const parsedTimeout = Number(import.meta.env.VITE_API_TIMEOUT_MS)
@@ -158,28 +164,42 @@ const mapWatchlist = (watchlist: BackendWatchlistResponse): Watchlist => ({
   updated_at: watchlist.updated_at,
 })
 
-const mapNewsArticle = (article: BackendNewsArticleResponse): NewsArticle => ({
-  id: null,
-  headline: article.title,
-  summary: article.summary,
-  source: article.source,
-  url: article.url,
-  sentiment_score: null,
-  published_at: article.published_at,
-  symbol: article.symbol,
-  collected_at: article.fetched_at,
-})
+const getSentimentScore = (content: string, sentimentTerms: string[]) => {
+  return sentimentTerms.reduce((score, sentimentTerm) => {
+    return content.includes(sentimentTerm) ? score + 1 : score
+  }, 0)
+}
 
-const normalizeNewsPagination = <T,>(items: T[], page: number, limit: number): PaginatedResponse<T> => {
-  const startIndex = (page - 1) * limit
-  const endIndex = startIndex + limit
-  const pageItems = items.slice(startIndex, endIndex)
+const determineNewsSentiment = (article: BackendNewsArticleResponse): NewsSentiment => {
+  const content = `${article.title} ${article.summary ?? ''}`.toLowerCase()
+  const positiveScore = getSentimentScore(content, POSITIVE_NEWS_TERMS)
+  const negativeScore = getSentimentScore(content, NEGATIVE_NEWS_TERMS)
+
+  if (positiveScore > negativeScore) {
+    return 'positive'
+  }
+
+  if (negativeScore > positiveScore) {
+    return 'negative'
+  }
+
+  return 'neutral'
+}
+
+const mapNewsArticle = (article: BackendNewsArticleResponse): NewsArticle => {
+  const sentiment = determineNewsSentiment(article)
 
   return {
-    items: pageItems,
-    page,
-    limit,
-    has_more: items.length > endIndex,
+    id: null,
+    headline: article.title,
+    summary: article.summary,
+    source: article.source,
+    url: article.url,
+    sentiment,
+    sentiment_score: sentiment === 'positive' ? 1 : sentiment === 'negative' ? -1 : 0,
+    published_at: article.published_at,
+    symbol: article.symbol,
+    collected_at: article.fetched_at,
   }
 }
 
@@ -213,16 +233,17 @@ export const getPrices = async (symbol: string, timeRange: PriceTimeRange = '1M'
   return response.data
 }
 
-export const getNews = async (page = DEFAULT_NEWS_PAGE, limit = DEFAULT_NEWS_LIMIT) => {
-  const safePage = Math.max(DEFAULT_NEWS_PAGE, page)
+export const getNews = async ({ symbol, limit = DEFAULT_NEWS_LIMIT }: GetNewsParams = {}) => {
+  const normalizedSymbol = symbol?.trim().toUpperCase() ?? ''
   const safeLimit = Math.max(1, limit)
   const response = await apiClient.get<BackendNewsArticleResponse[]>('/news', {
     params: {
-      limit: safePage * safeLimit + safeLimit,
+      limit: safeLimit,
+      ...(normalizedSymbol ? { symbol: normalizedSymbol } : {}),
     },
   })
 
-  return normalizeNewsPagination(response.data.map(mapNewsArticle), safePage, safeLimit)
+  return response.data.map(mapNewsArticle)
 }
 
 export const getWatchlists = async () => {

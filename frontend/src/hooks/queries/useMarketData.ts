@@ -11,7 +11,7 @@ import type { PriceTimeRange } from '@/services/types'
 export const marketDataQueryKeys = {
   instruments: ['instruments'] as const,
   prices: (symbol: string, timeRange: PriceTimeRange = '1M') => ['prices', symbol, timeRange] as const,
-  news: (page = 1, limit = 20) => ['news', page, limit] as const,
+  news: (symbol: string | null = null, limit = 20) => ['news', symbol ?? 'market', limit] as const,
   watchlists: ['watchlists'] as const,
   watchlist: (id: number) => ['watchlists', id] as const,
 }
@@ -34,10 +34,12 @@ export const usePrices = (symbol: string, timeRange: PriceTimeRange = '1M') => {
   })
 }
 
-export const useNews = (page = 1, limit = 20) => {
+export const useNews = (symbol: string | null = null, limit = 20) => {
+  const normalizedSymbol = symbol?.trim().toUpperCase() ?? null
+
   return useQuery({
-    queryKey: marketDataQueryKeys.news(page, limit),
-    queryFn: () => getNews(page, limit),
+    queryKey: marketDataQueryKeys.news(normalizedSymbol, limit),
+    queryFn: () => getNews({ symbol: normalizedSymbol, limit }),
     placeholderData: keepPreviousData,
   })
 }
