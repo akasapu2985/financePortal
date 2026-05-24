@@ -1,0 +1,4 @@
+# Local agency config — Playwright MCP for browser automation
+
+[mcps.servers]
+playwright = { args = ["-y", "@playwright/mcp@latest"], command = "npx", tools = ["*"], type = "stdio" }
