@@ -9,3 +9,4 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+- 2026-05-24T19:51:02Z — Team update: Kaladin completed backend foundation, Navani completed schema + migrations, Renarin completed design spec, Adolin completed 75-issue backlog. Phase 1 blocked on GitHub account restrictions.

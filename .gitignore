@@ -2,7 +2,27 @@
 .squad/orchestration-log/
 .squad/log/
 .squad/decisions/inbox/
+!.squad/decisions/
+!.squad/decisions/inbox/
+!.squad/decisions/inbox/kaladin-backend-foundation.md
 .squad/sessions/
 .squad/.scratch/
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
+
+# Local backend runtime artifacts
+.env
+backend/.venv/
+backend/.pytest_cache/
+backend/.ruff_cache/
+**/__pycache__/
+
+node_modules/
+.env
+backend/.venv/
+backend/.ruff_cache/
+backend/.pytest_cache/
+backend/__pycache__/
+**/__pycache__/
+.playwright-mcp/
+backend/uv.lock

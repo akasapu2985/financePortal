@@ -9,3 +9,4 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+- 2026-05-24T19:51:02Z — Team update: Kaladin backend ready, Navani schema ready. Phase 1 smoke test dependencies satisfied. Ready to begin test implementation.

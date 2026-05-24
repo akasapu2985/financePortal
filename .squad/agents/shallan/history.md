@@ -9,3 +9,4 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+- 2026-05-24T19:51:02Z — Team update: Renarin design spec complete (HTML conversion in progress), Kaladin backend ready, Adolin backlog ready. Frontend scaffold dependencies materializing. Await Renarin HTML + Phase 1 verification.

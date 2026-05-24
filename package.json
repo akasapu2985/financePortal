@@ -1,0 +1,13 @@
+{
+  "name": "finance-portal",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Personal financial intelligence platform",
+  "scripts": {
+    "setup": "npx playwright install chromium && echo Setup complete",
+    "postinstall": "npx playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

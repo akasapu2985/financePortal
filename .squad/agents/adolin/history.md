@@ -10,3 +10,6 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+- 2026-05-24T12:26:16-07:00 — financePortal work is tracked as small, single-session GitHub issues with explicit dependencies and named squad ownership before implementation starts.
+- 2026-05-24T12:26:16-07:00 — The roadmap is organized in six labeled phases spanning foundation, dashboard, alerts, extended sources, AI analysis, and MCP integration.
+- 2026-05-24T19:51:02Z — Team update: Kaladin backend foundation complete, Navani schema complete, Renarin design spec complete. 75-issue backlog ready for GitHub creation once account issue resolved.
