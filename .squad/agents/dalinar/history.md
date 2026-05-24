@@ -9,4 +9,4 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
-- 2026-05-24T19:51:02Z — Team update: Kaladin completed backend foundation, Navani completed schema + migrations, Renarin completed design spec, Adolin completed 75-issue backlog. Phase 1 blocked on GitHub account restrictions.
+- 2026-05-24T22:22:23Z — (SUPERSEDED) Previously replaced `gh` with `Invoke-RestMethod` — reverted. Root cause was `gh` not on PATH, not missing. `gh` v2.92.0 is installed at `C:\Program Files\GitHub CLI` and authenticated as `akasapu2985`. Fix applied to `start.ps1` (PATH fallback) and Ralph's charter (uses `gh` directly).

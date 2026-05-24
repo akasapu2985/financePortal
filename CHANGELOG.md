@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- Ralph reconciled issue tracker: confirmed #2–#31 closed, labeled #32–#34 as `go:ready` for Phase 2 close-out
+
+## [2025-07-17]
+
+### Meta
+- Ralph (Work Monitor) reconciled GitHub issue tracker against codebase — confirmed issues #2–#31 closed (Phase 1 complete + Phase 2 complete). Issues #32, #33, #34 remain open as Phase 2 remaining work. Issues #35–#75 remain open representing Phases 3–6 backlog.
+
 ### Added
 - Watchlist CRUD controls in `frontend/src/components/watchlist/WatchlistActions.tsx`, `frontend/src/components/watchlist/WatchlistItem.tsx`, `frontend/src/components/watchlist/WatchlistPanel.tsx`, `frontend/src/hooks/mutations/useWatchlistMutations.ts`, `frontend/src/hooks/queries/useMarketData.ts`, `frontend/src/services/api.ts`, and `backend/src/api/routes/watchlists.py`, including add/remove buttons, cache-syncing mutations, inline success/error feedback, and support for DELETE payloads on `/api/watchlists/{id}/instruments`
 - Extended chart time-range controls in `frontend/src/components/chart/TimeRangeSelector.tsx`, `frontend/src/components/chart/ChartPanel.tsx`, `frontend/src/services/api.ts`, `frontend/src/services/types.ts`, and `backend/src/api/routes/prices.py`, including 6M/1Y/ALL ranges and full-history API parameter support

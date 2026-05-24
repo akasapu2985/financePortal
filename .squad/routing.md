@@ -41,6 +41,14 @@ How to decide who handles what.
 3. Members can reassign by removing their label and adding another member's label.
 4. The `squad` label is the "inbox" — untriaged issues waiting for Dalinar's review.
 
+## Ralph — ALWAYS SPAWN (Never Direct Mode)
+
+**Any "Ralph" command (status, go, check, start, idle) MUST spawn Ralph as an agent.**
+Ralph has a startup routine in his charter that authenticates to GitHub and fetches live data.
+The coordinator cannot replicate this — it MUST dispatch. No exceptions. No inline handling.
+
+Use Lightweight spawn template. Ralph reads his own charter + history. That's all the context he needs.
+
 ## Rules
 
 1. **Eager by default** — spawn all agents who could usefully start work, including anticipatory downstream work.

@@ -77,6 +77,16 @@ Ensure-Command -Name 'python' -InstallHint 'Install Python 3.12 or later first.'
 Ensure-Uv
 Ensure-Command -Name 'docker' -InstallHint 'Install Docker Desktop and make sure it is on PATH.'
 
+# Ensure GitHub CLI is on PATH (installed via winget, sometimes not in fresh shells)
+if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+    $ghPath = 'C:\Program Files\GitHub CLI'
+    if (Test-Path (Join-Path $ghPath 'gh.exe')) {
+        $env:Path += ";$ghPath"
+    } else {
+        Write-Host '⚠️  gh CLI not found. Install: winget install GitHub.cli' -ForegroundColor Yellow
+    }
+}
+
 try {
     docker info | Out-Null
 } catch {
