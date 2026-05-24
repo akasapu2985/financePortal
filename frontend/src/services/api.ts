@@ -80,6 +80,9 @@ const priceRangeConfig: Record<PriceTimeRange, { intraday_limit: number; daily_l
   '1W': { intraday_limit: 390, daily_limit: 5 },
   '1M': { intraday_limit: 500, daily_limit: 30 },
   '3M': { intraday_limit: 500, daily_limit: 90 },
+  '6M': { intraday_limit: 500, daily_limit: 180 },
+  '1Y': { intraday_limit: 500, daily_limit: 365 },
+  ALL: { intraday_limit: 500, daily_limit: 5000 },
 }
 
 export class ApiClientError extends Error implements ApiErrorShape {
@@ -227,7 +230,10 @@ export const getInstruments = async () => {
 export const getPrices = async (symbol: string, timeRange: PriceTimeRange = '1M') => {
   const normalizedSymbol = symbol.trim().toUpperCase()
   const response = await apiClient.get<PriceSeriesResponse>(`/prices/${normalizedSymbol}`, {
-    params: priceRangeConfig[timeRange],
+    params: {
+      ...priceRangeConfig[timeRange],
+      time_range: timeRange,
+    },
   })
 
   return response.data
@@ -284,10 +290,9 @@ export const addInstrumentToWatchlist = async (watchlistId: number, symbol: stri
 }
 
 export const removeInstrumentFromWatchlist = async (watchlistId: number, symbol: string) => {
-  const normalizedSymbol = symbol.trim().toUpperCase()
-  const response = await apiClient.delete<BackendWatchlistResponse>(
-    `/watchlists/${watchlistId}/instruments/${normalizedSymbol}`,
-  )
+  const response = await apiClient.delete<BackendWatchlistResponse>(`/watchlists/${watchlistId}/instruments`, {
+    data: toWatchlistInstrumentPayload(symbol),
+  })
 
   return mapWatchlist(response.data)
 }

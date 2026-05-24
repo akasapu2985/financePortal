@@ -309,10 +309,27 @@ def test_add_instrument_validates_symbol_and_rejects_duplicates(client: TestClie
 def test_remove_instrument_removes_membership_and_handles_missing_records(
     client: TestClient,
 ) -> None:
-    missing_watchlist = client.delete("/watchlists/999/instruments/AAPL")
-    missing_instrument = client.delete("/watchlists/1/instruments/NVDA")
-    missing_membership = client.delete("/watchlists/1/instruments/MSFT")
-    success_response = client.delete("/watchlists/1/instruments/AAPL")
+    missing_watchlist = client.request(
+        "DELETE",
+        "/watchlists/999/instruments",
+        json={"symbol": "AAPL"},
+    )
+    missing_instrument = client.request(
+        "DELETE",
+        "/watchlists/1/instruments",
+        json={"symbol": "NVDA"},
+    )
+    missing_membership = client.request(
+        "DELETE",
+        "/watchlists/1/instruments",
+        json={"symbol": "MSFT"},
+    )
+    success_response = client.request(
+        "DELETE",
+        "/watchlists/1/instruments",
+        json={"symbol": "AAPL"},
+    )
+    legacy_success_response = client.delete("/watchlists/1/instruments/AAPL")
 
     assert missing_watchlist.status_code == 404
     assert missing_watchlist.json() == {"detail": "Watchlist 999 not found"}
@@ -323,3 +340,5 @@ def test_remove_instrument_removes_membership_and_handles_missing_records(
     assert success_response.status_code == 200
     assert success_response.json()["instrument_count"] == 0
     assert success_response.json()["instruments"] == []
+    assert legacy_success_response.status_code == 404
+    assert legacy_success_response.json() == {"detail": "Instrument AAPL is not in watchlist 1"}

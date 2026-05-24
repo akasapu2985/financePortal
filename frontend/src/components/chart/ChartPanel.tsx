@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react'
-import { PanelFrame } from '@/components/shell/PanelFrame'
+import { TimeRangeSelector } from '@/components/chart/TimeRangeSelector'
 import { TradingViewChart } from '@/components/chart/TradingViewChart'
-import { usePrices, useInstruments } from '@/hooks/queries/useMarketData'
+import { PanelFrame } from '@/components/shell/PanelFrame'
+import { useInstruments, usePrices } from '@/hooks/queries/useMarketData'
 import { useSelectedSymbol } from '@/hooks/useSelectedSymbol'
 import type { PriceTimeRange } from '@/services/types'
 import { formatPercent, formatPrice, formatSignedPrice, getQuoteSummary } from '@/utils/marketData'
-
-const timeRangeOptions: PriceTimeRange[] = ['1D', '1W', '1M', '3M']
 
 const getChangeClassName = (changePercent: number | null) => {
   if (typeof changePercent !== 'number') {
@@ -84,27 +83,7 @@ export const ChartPanel = () => {
             )}
           </section>
 
-          <section className="flex flex-wrap gap-2 rounded-xl border border-border-subtle bg-surface-1 px-3 py-2">
-            {timeRangeOptions.map((option) => {
-              const isActive = option === timeRange
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setTimeRange(option)}
-                  className={[
-                    'rounded-md px-3 py-1.5 text-sm transition-colors',
-                    isActive
-                      ? 'bg-accent/16 text-accent'
-                      : 'bg-surface-2 text-text-secondary hover:bg-surface-hover hover:text-text-primary',
-                  ].join(' ')}
-                >
-                  {option}
-                </button>
-              )
-            })}
-          </section>
+          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
 
           <TradingViewChart symbol={normalizedSymbol} timeRange={timeRange} />
 

@@ -49,7 +49,7 @@ def _to_price_point(row: dict[str, object]) -> PricePoint:
 async def get_prices(
     symbol: str,
     intraday_limit: int = Query(default=78, ge=1, le=500),
-    daily_limit: int = Query(default=90, ge=1, le=365),
+    daily_limit: int = Query(default=90, ge=1, le=5000),
 ) -> PriceSeriesResponse:
     """Return intraday and daily price history for a symbol."""
     normalized_symbol = symbol.upper()

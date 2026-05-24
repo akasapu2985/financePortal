@@ -88,7 +88,7 @@ class WatchlistWriteRequest(BaseModel):
 
 
 class WatchlistInstrumentWriteRequest(BaseModel):
-    """Payload used to add an instrument to a watchlist."""
+    """Payload used to add or remove an instrument from a watchlist."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -153,6 +153,26 @@ async def _build_watchlist_detail(connection: Any, watchlist_id: int) -> Watchli
         instrument_count=len(instruments),
         instruments=instruments,
     )
+
+
+async def _remove_watchlist_instrument(
+    connection: Any,
+    watchlist_id: int,
+    symbol: str,
+) -> WatchlistDetailResponse:
+    await _fetch_watchlist_row(connection, watchlist_id)
+    instrument_row = await _fetch_instrument_row(connection, symbol)
+    result = await connection.execute(
+        _DELETE_WATCHLIST_INSTRUMENT_QUERY,
+        watchlist_id,
+        instrument_row["id"],
+    )
+    if result == "DELETE 0":
+        raise HTTPException(
+            status_code=404,
+            detail=f"Instrument {symbol} is not in watchlist {watchlist_id}",
+        )
+    return await _build_watchlist_detail(connection, watchlist_id)
 
 
 @router.get("", response_model=list[WatchlistSummaryResponse])
@@ -247,25 +267,24 @@ async def add_instrument_to_watchlist(
         return await _build_watchlist_detail(connection, watchlist_id)
 
 
-@router.delete("/{watchlist_id}/instruments/{symbol}", response_model=WatchlistDetailResponse)
+@router.delete("/{watchlist_id}/instruments", response_model=WatchlistDetailResponse)
 async def remove_instrument_from_watchlist(
+    watchlist_id: int,
+    payload: WatchlistInstrumentWriteRequest,
+) -> WatchlistDetailResponse:
+    """Remove an instrument from a watchlist by symbol."""
+    pool = await get_pool()
+    async with pool.acquire() as connection:
+        return await _remove_watchlist_instrument(connection, watchlist_id, payload.symbol)
+
+
+@router.delete("/{watchlist_id}/instruments/{symbol}", response_model=WatchlistDetailResponse)
+async def remove_instrument_from_watchlist_by_symbol(
     watchlist_id: int,
     symbol: str,
 ) -> WatchlistDetailResponse:
-    """Remove an instrument from a watchlist by symbol."""
+    """Remove an instrument from a watchlist by symbol path."""
     normalized_symbol = symbol.strip().upper()
     pool = await get_pool()
     async with pool.acquire() as connection:
-        await _fetch_watchlist_row(connection, watchlist_id)
-        instrument_row = await _fetch_instrument_row(connection, normalized_symbol)
-        result = await connection.execute(
-            _DELETE_WATCHLIST_INSTRUMENT_QUERY,
-            watchlist_id,
-            instrument_row["id"],
-        )
-        if result == "DELETE 0":
-            raise HTTPException(
-                status_code=404,
-                detail=f"Instrument {normalized_symbol} is not in watchlist {watchlist_id}",
-            )
-        return await _build_watchlist_detail(connection, watchlist_id)
+        return await _remove_watchlist_instrument(connection, watchlist_id, normalized_symbol)

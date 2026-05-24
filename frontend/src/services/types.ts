@@ -73,4 +73,4 @@ export interface WatchlistInstrumentPayload {
   symbol: string
 }
 
-export type PriceTimeRange = '1D' | '1W' | '1M' | '3M'
+export type PriceTimeRange = '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'
