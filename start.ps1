@@ -21,14 +21,25 @@ function Ensure-Command {
 }
 
 function Ensure-Uv {
+    $UvBinPath = Join-Path $HOME '.local\bin'
+    if ($env:PATH -notlike "*$UvBinPath*") {
+        $env:PATH = "$UvBinPath;$env:PATH"
+    }
+
     if (Get-Command uv -ErrorAction SilentlyContinue) {
         return
     }
 
     Write-Step 'Installing uv'
-    python -m pip install --user uv
-    $UserBase = (python -m site --user-base).Trim()
-    $env:PATH = "$(Join-Path $UserBase 'Python312\Scripts');$(Join-Path $UserBase 'Python311\Scripts');$env:PATH"
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "irm https://astral.sh/uv/install.ps1 | iex"
+    if ($LASTEXITCODE -ne 0) {
+        throw 'uv installation failed.'
+    }
+
+    if ($env:PATH -notlike "*$UvBinPath*") {
+        $env:PATH = "$UvBinPath;$env:PATH"
+    }
+
     Ensure-Command -Name 'uv' -InstallHint 'Install uv from https://docs.astral.sh/uv/.'
 }
 
@@ -75,7 +86,15 @@ function Wait-ForPostgresHealth {
 
 Ensure-Command -Name 'python' -InstallHint 'Install Python 3.12 or later first.'
 Ensure-Uv
-Ensure-Command -Name 'docker' -InstallHint 'Install Docker Desktop and make sure it is on PATH.'
+# Ensure Docker is on PATH (winget install may not update current session)
+if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    $dockerCliPath = 'C:\Program Files\Docker\Docker\resources\bin'
+    if (Test-Path (Join-Path $dockerCliPath 'docker.exe')) {
+        $env:Path += ";$dockerCliPath"
+    } else {
+        throw 'Docker is not installed. Run .\setup.ps1 or: winget install Docker.DockerDesktop'
+    }
+}
 
 # Ensure GitHub CLI is on PATH (installed via winget, sometimes not in fresh shells)
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
@@ -87,10 +106,29 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     }
 }
 
-try {
-    docker info | Out-Null
-} catch {
-    throw 'Docker Desktop is not running. Start Docker Desktop and rerun start.ps1.'
+# Verify Docker daemon is running — offer to launch if not
+$dockerInfo = docker info 2>&1
+if ($LASTEXITCODE -ne 0) {
+    $DockerDesktopExe = 'C:\Program Files\Docker\Docker\Docker Desktop.exe'
+    if (Test-Path $DockerDesktopExe) {
+        Write-Host '⚠️  Docker Desktop is installed but not running.' -ForegroundColor Yellow
+        Write-Host '    Launching Docker Desktop...' -ForegroundColor Cyan
+        Start-Process $DockerDesktopExe
+        Write-Host '    Waiting for Docker daemon (up to 120s)...' -ForegroundColor Cyan
+        $ready = $false
+        for ($i = 1; $i -le 24; $i++) {
+            Start-Sleep -Seconds 5
+            docker info 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) { $ready = $true; break }
+            Write-Host "    ... still waiting ($($i * 5)s)" -ForegroundColor DarkGray
+        }
+        if (-not $ready) {
+            throw 'Docker daemon did not start in time. Open Docker Desktop manually and rerun start.ps1.'
+        }
+        Write-Host '    Docker is ready!' -ForegroundColor Green
+    } else {
+        throw 'Docker Desktop is not running and could not be found. Run .\setup.ps1 first.'
+    }
 }
 
 if (-not (Test-Path $EnvFile)) {
