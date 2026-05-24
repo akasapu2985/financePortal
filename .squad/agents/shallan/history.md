@@ -9,6 +9,7 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+- 2026-05-24T12:51:37-07:00 — Tailwind CSS v4 is wired through the Vite frontend, with design-spec tokens centralized in `frontend/src/styles/tokens.css` and shared theme/status classes in `frontend/src/styles/index.css`.
 - The frontend lives in `frontend/` as a Vite + React + TypeScript app with strict mode enabled.
 - The frontend uses an `@/` path alias that maps to `frontend/src/`.
 - React Query is wired at the app entry point from the initial scaffold, and the Vite dev server proxies `/api` requests to `http://localhost:8000`.

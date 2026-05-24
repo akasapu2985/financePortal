@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Watchlist CRUD backend support with a new FastAPI router, request/response validation, async watchlist membership endpoints, and a persisted watchlist schema migration
+- Tailwind dark-theme token plumbing in `frontend/` with a Tailwind theme extension, CSS custom properties in `frontend/src/styles/tokens.css`, shared status/surface classes, and a themed shell in `frontend/src/App.tsx`
 - Scaffolded `frontend/` with a Vite + React + TypeScript app, React Query provider wiring, `/api` dev proxy, strict TypeScript path aliases, and initial source folders for components, services, hooks, and types
 - Phase 1 integration smoke test coverage in `backend/tests/integration/test_phase1_smoke.py` for FastAPI startup, health, instruments, prices, news, and mocked collector execution
 - Root `README.md` with prerequisites, setup flow, test commands, project structure, and the documented Phase 1 verification command
