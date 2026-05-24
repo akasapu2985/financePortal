@@ -42,6 +42,7 @@ class MigrationDiscoveryTests(unittest.TestCase):
         self.assertTrue(migrations_path.is_dir())
         self.assertTrue((migrations_path / '001_core.sql').exists())
         self.assertTrue((migrations_path / '002_news.sql').exists())
+        self.assertTrue((migrations_path / '003_watchlists.sql').exists())
 
 
 if __name__ == '__main__':

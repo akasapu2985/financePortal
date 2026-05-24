@@ -11,6 +11,7 @@ from api.routes.health import router as health_router
 from api.routes.instruments import router as instruments_router
 from api.routes.news import router as news_router
 from api.routes.prices import router as prices_router
+from api.routes.watchlists import router as watchlists_router
 from config import load_environment
 from db.connection import close_pool, get_pool
 
@@ -43,3 +44,4 @@ app.include_router(health_router)
 app.include_router(instruments_router)
 app.include_router(prices_router)
 app.include_router(news_router)
+app.include_router(watchlists_router)
