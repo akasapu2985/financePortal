@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Design Specification</title>
+  <style>
+
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --border: #0f3460;
+      --accent: #e94560;
+      --text: #eaeaea;
+      --muted: #a0a0b0;
+      --success: #4ecdc4;
+      --warning: #f39c12;
+      --code-bg: #0d1117;
+      --phase1: #4ecdc4;
+      --phase2: #a78bfa;
+      --phase3: #f97316;
+      --phase4: #06b6d4;
+      --phase5: #ec4899;
+      --phase6: #84cc16;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { color: var(--accent); font-size: 2.2rem; margin-bottom: 0.5rem; }
+    h2 { color: var(--success); font-size: 1.6rem; margin-top: 2.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    h3 { color: var(--warning); font-size: 1.2rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    p { margin-bottom: 1rem; }
+    ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.4rem; }
+    code {
+      background: var(--code-bg);
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    pre {
+      background: var(--code-bg);
+      padding: 1rem 1.5rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    pre code { padding: 0; background: none; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+    th, td { padding: 0.6rem 1rem; border: 1px solid var(--border); text-align: left; }
+    th { background: var(--surface); color: var(--success); }
+    .callout {
+      background: var(--surface);
+      border-left: 4px solid var(--accent);
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .phase-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .phase-card h3 {
+      margin-top: 0;
+      font-size: 1.3rem;
+    }
+    .phase-1 h3 { color: var(--phase1); }
+    .phase-2 h3 { color: var(--phase2); }
+    .phase-3 h3 { color: var(--phase3); }
+    .phase-4 h3 { color: var(--phase4); }
+    .phase-5 h3 { color: var(--phase5); }
+    .phase-6 h3 { color: var(--phase6); }
+    .task-list { list-style: none; margin-left: 0; }
+    .task-list li { padding: 0.3rem 0; padding-left: 1.5rem; position: relative; }
+    .task-list li::before {
+      content: "☐";
+      position: absolute;
+      left: 0;
+    }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    .dep { color: var(--muted); font-style: italic; font-size: 0.85rem; }
+  
+  </style>
+</head>
+<body>
+
+<p># Dashboard Design Specification</p>
+<strong>Owner:</strong> Renarin  
+<strong>Requested by:</strong> Giakas  
+<strong>Date:</strong> 2026-05-24T12:26:16-07:00  
+<strong>Scope:</strong> Phase 2 dashboard MVP, with forward-compatible guidance for Phase 3 alerts and Phase 5 AI insights
+<p>## Design Intent</p>
+<p>Build a desktop-first financial command center that combines Bloomberg-level information density with TradingView-level chart usability. The dashboard should feel fast, serious, and operational. Every area should support scan-first behavior: prices, deltas, sentiment, and alerts should be readable in under 2 seconds.</p>
+<p>Core principles:</p>
+<ul>
+<li>Dense, not cramped</li>
+<li>Dark by default, with layered surfaces instead of flat black</li>
+<li>Monospace numerics everywhere prices, percentages, time, or counts matter</li>
+<li>Color used semantically, never decoratively</li>
+<li>The chart is the focal point, but the watchlist and news rails stay visible at all times on desktop</li>
+<li>Interactions should reward power users: keyboard support, predictable focus, low-friction switching</li>
+</ul>
+<p>---</p>
+<p>## 1. Layout Architecture</p>
+<p>### Primary Layout Model</p>
+<p>Use a <strong>3-column command-center layout</strong> with a persistent top bar.</p>
+<ul>
+<li><strong>Left rail:</strong> Watchlists and portfolio instruments</li>
+<li><strong>Center canvas:</strong> Chart workspace and symbol detail</li>
+<li><strong>Right rail:</strong> News feed by default, with room for alerts and AI insights in later phases</li>
+<li><strong>Top bar:</strong> Search, market pulse, portfolio summary, market clock/status</li>
+</ul>
+<p>This is the default desktop arrangement because it preserves the two critical side contexts around the chart:</p>
+<ul>
+<li>left side answers <strong>what should I look at?</strong></li>
+<li>center answers <strong>what is the market doing?</strong></li>
+<li>right side answers <strong>why is it moving?</strong></li>
+</ul>
+<p>### Desktop Panel Widths</p>
+<p>For a 1440px-wide viewport:</p>
+<ul>
+<li><strong>Top bar height:</strong> 56px</li>
+<li><strong>Left panel width:</strong> 280px default, resizable from 240px to 340px</li>
+<li><strong>Center panel width:</strong> fluid, minimum 640px</li>
+<li><strong>Right panel width:</strong> 360px default, resizable from 320px to 420px</li>
+<li><strong>Panel gutters:</strong> 8px</li>
+<li><strong>Outer app padding:</strong> 8px</li>
+<li><strong>Inner panel padding:</strong> 12px</li>
+</ul>
+<p>For a 1920px-wide viewport:</p>
+<ul>
+<li>Left panel remains 280px to 320px</li>
+<li>Right panel remains 360px to 400px</li>
+<li>Extra space goes to chart canvas first</li>
+</ul>
+<p>### Vertical Structure</p>
+<p>Within the center column:</p>
+<ul>
+<li><strong>Chart header:</strong> 56px</li>
+<li><strong>Time range and control row:</strong> 36px</li>
+<li><strong>Chart area:</strong> flexible, target 480px to 640px visible height</li>
+<li><strong>Optional lower module slot:</strong> 160px to 220px reserved for future order flow, indicator table, or AI insight strip</li>
+</ul>
+<p>Within the left column:</p>
+<ul>
+<li><strong>Watchlist tab row:</strong> 36px</li>
+<li><strong>Watchlist table header:</strong> 28px</li>
+<li><strong>Watchlist rows:</strong> scrollable, fixed row height</li>
+</ul>
+<p>Within the right column:</p>
+<ul>
+<li><strong>Panel header with tabs/filters:</strong> 40px</li>
+<li><strong>Scrollable content feed:</strong> remaining height</li>
+</ul>
+<p>### Resizability</p>
+<p>Support resizable left and right rails on desktop.</p>
+<ul>
+<li>Resize handles: 4px hit target rendered inside an 8px gutter</li>
+<li>Handle default color: <code>var(--color-border-subtle)</code></li>
+<li>Handle hover color: <code>var(--color-accent)</code></li>
+<li>Save widths to local storage per user session</li>
+<li>Double-click handle resets to default width</li>
+</ul>
+<p>### Panel Relationships</p>
+<p>Selection state should be single-source and global.</p>
+<strong>Primary relationship model:</strong>
+<ul>
+<li>Selecting a symbol in the watchlist updates:</li>
+</ul>
+<p>  - chart header</p>
+<p>  - main chart series</p>
+<p>  - chart tooltip symbol context</p>
+<p>  - right-side news filter</p>
+<p>  - alert badges and sentiment markers where present</p>
+<p>  - AI insight panel context when that phase ships</p>
+<ul>
+<li>Search selection behaves exactly like watchlist selection</li>
+<li>Clicking a news item with a symbol tag switches selected symbol if different, then opens article detail</li>
+<li>Alert click jumps focus to associated symbol and relevant panel</li>
+</ul>
+<p>### Header / Toolbar Design</p>
+<p>Top bar is a dense utility strip, not a marketing navbar.</p>
+<ul>
+<li>Height: 56px</li>
+<li>Horizontal padding: 12px</li>
+<li>Item gap: 12px</li>
+<li>Background: elevated surface</li>
+<li>Bottom border: 1px solid subtle border</li>
+</ul>
+<p>Top bar zones:</p>
+<ol>
+<li><strong>Left:</strong> global symbol search</li>
+<li><strong>Center-left:</strong> market indices mini-tickers</li>
+<li><strong>Center-right:</strong> portfolio value and day P/L</li>
+<li><strong>Right:</strong> market status, time, settings/profile affordance later</li>
+</ol>
+<p>### Layout ASCII Reference</p>
+<pre><code class="language-text"><code>┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+<p>│ Search / Command     S&P 500   NASDAQ   DOW        Portfolio Value / Day P&L        Market Open  09:41 ET │ 56</p>
+<p>├──────────────────────┬───────────────────────────────────────────────────────────────┬───────────────────────┤</p>
+<p>│ Watchlists           │ Chart Header: AAPL  189.42  +2.14 (+1.14%)                   │ News / Alerts / AI    │</p>
+<p>│ Tabs                 ├───────────────────────────────────────────────────────────────┤ Tabs + Filters        │</p>
+<p>│ Symbol  Last  Chg %  │ 1D  1W  1M  3M  1Y  ALL   Candles  Volume  Compare  Indicators│                       │</p>
+<p>│ ───────────────────  │                                                               │ Article card          │</p>
+<p>│ AAPL   189.42 +1.14  │                                                               │ Headline              │</p>
+<p>│ MSFT   418.20 -0.42  │                                                               │ Source  12m  Positive │</p>
+<p>│ NVDA  1028.44 +3.62  │                     Main chart canvas                          │                       │</p>
+<p>│ TSLA   176.10 -4.90  │                candlestick + volume subplot                    │ Article card          │</p>
+<p>│ AMD    161.88 +2.07  │                                                               │                       │</p>
+<p>│ ...                  │                                                               │                       │</p>
+<p>│                      │                                                               │                       │</p>
+<p>│                      ├───────────────────────────────────────────────────────────────┤                       │</p>
+<p>│                      │ Optional lower module slot                                     │                       │</p>
+<p>└──────────────────────┴───────────────────────────────────────────────────────────────┴───────────────────────┘</p>
+<p> 280px                                      fluid center / min 640px                          360px</p>
+</code></pre>
+<p>### Breakpoints and Collapse Order</p>
+<ul>
+<li><strong>≥ 1366px:</strong> full 3-column layout</li>
+<li><strong>1200px to 1365px:</strong> keep 3 columns, shrink left rail to 240px and right rail to 320px</li>
+<li><strong>992px to 1199px:</strong> convert right panel to slide-over drawer; keep left watchlist visible</li>
+<li><strong>768px to 991px:</strong> watchlist becomes collapsible drawer, chart remains primary</li>
+<li><strong>< 768px:</strong> not optimized first, but stack top bar, chart, contextual drawer</li>
+</ul>
+<p>The right panel collapses before the left panel because symbol navigation is more core than passive news browsing.</p>
+<p>---</p>
+<p>## 2. Color System</p>
+<p>Reference mood: TradingView dark theme for chart clarity, Bloomberg dark for disciplined density, with slightly cleaner contrast separation.</p>
+<p>### Core Dark Palette</p>
+<pre><code class="language-css"></code>:root {
+<p>  --color-bg-app: #070b11;</p>
+<p>  --color-bg-canvas: #0b1118;</p>
+<p>  --color-surface-1: #0f1722;</p>
+<p>  --color-surface-2: #131d2a;</p>
+<p>  --color-surface-3: #182434;</p>
+<p>  --color-surface-hover: #1d2b3d;</p>
+<p>  --color-surface-selected: #1a3048;</p>
+<p>  --color-border-subtle: #213247;</p>
+<p>  --color-border-strong: #2b425b;</p>
+<p>  --color-gridline: #1b2837;</p>
+<p>  --color-text-primary: #e6edf5;</p>
+<p>  --color-text-secondary: #a9b7c6;</p>
+<p>  --color-text-muted: #6f8297;</p>
+<p>  --color-text-disabled: #516172;</p>
+<p>  --color-accent: #4da3ff;</p>
+<p>  --color-accent-hover: #6ab2ff;</p>
+<p>  --color-accent-soft: rgba(77, 163, 255, 0.16);</p>
+<p>  --color-gain: #22c55e;</p>
+<p>  --color-gain-strong: #16a34a;</p>
+<p>  --color-loss: #ef4444;</p>
+<p>  --color-loss-strong: #dc2626;</p>
+<p>  --color-neutral: #94a3b8;</p>
+<p>  --color-warning: #f59e0b;</p>
+<p>  --color-info: #38bdf8;</p>
+<p>  --color-alert-critical: #ef4444;</p>
+<p>  --color-alert-important: #f59e0b;</p>
+<p>  --color-alert-info: #38bdf8;</p>
+<p>}</p>
+</code></pre>
+<p>### Surface Usage Rules</p>
+<ul>
+<li><code>--color-bg-app</code>: entire application background</li>
+<li><code>--color-bg-canvas</code>: chart area background and deep recess surfaces</li>
+<li><code>--color-surface-1</code>: default panel background</li>
+<li><code>--color-surface-2</code>: elevated rows, cards, tabs</li>
+<li><code>--color-surface-3</code>: selected modules, sticky headers</li>
+<li><code>--color-surface-hover</code>: hover feedback on rows/cards</li>
+<li><code>--color-surface-selected</code>: selected watchlist row, selected tab, focused state backing</li>
+</ul>
+<p>### Semantic Usage</p>
+<ul>
+<li><strong>Gain:</strong> <code>#22c55e</code></li>
+<li><strong>Loss:</strong> <code>#ef4444</code></li>
+<li><strong>Neutral:</strong> <code>#94a3b8</code></li>
+<li><strong>Warning:</strong> <code>#f59e0b</code></li>
+<li><strong>Info:</strong> <code>#38bdf8</code></li>
+</ul>
+<p>Rules:</p>
+<ul>
+<li>Gains/losses should always affect <strong>value text first</strong>, then optional icon/background tint second</li>
+<li>Never use green/red for non-market meaning unless it is truly success/error</li>
+<li>Warning is for watch conditions, latency, stale data, or batched alerts</li>
+<li>Info is for neutral tags, selected filters, and dashboard-only alerts</li>
+</ul>
+<p>### Chart Colors</p>
+<p>Use chart colors that match financial tool expectations, not generic product colors.</p>
+<pre><code class="language-css"><code>:root {
+<p>  --chart-candle-up: #22c55e;</p>
+<p>  --chart-candle-down: #ef4444;</p>
+<p>  --chart-candle-border-up: #22c55e;</p>
+<p>  --chart-candle-border-down: #ef4444;</p>
+<p>  --chart-wick-up: #4ade80;</p>
+<p>  --chart-wick-down: #f87171;</p>
+<p>  --chart-volume-up: rgba(34, 197, 94, 0.42);</p>
+<p>  --chart-volume-down: rgba(239, 68, 68, 0.42);</p>
+<p>  --chart-grid: #1b2837;</p>
+<p>  --chart-crosshair: #6f8297;</p>
+<p>  --chart-price-line: #8fb8ff;</p>
+<p>  --chart-overlay-1: #fbbf24;</p>
+<p>  --chart-overlay-2: #a78bfa;</p>
+<p>  --chart-overlay-3: #22d3ee;</p>
+<p>}</p>
+</code></pre>
+<p>Guidance:</p>
+<ul>
+<li>Up candles should be filled green, not hollow, to match modern trading UI expectations</li>
+<li>Volume bars should be visibly lower contrast than candles</li>
+<li>Overlay colors must remain distinguishable over dark background and across red/green candle states</li>
+</ul>
+<p>### Text Hierarchy</p>
+<ul>
+<li><strong>Primary text:</strong> </code>#e6edf5<code> for active prices, headlines, selected labels</li>
+<li><strong>Secondary text:</strong> </code>#a9b7c6<code> for metadata, column headers, source labels</li>
+<li><strong>Muted text:</strong> </code>#6f8297<code> for timestamps, disabled states, placeholder labels</li>
+</ul>
+<p>### Tailwind Token Mapping</p>
+<pre><code class="language-ts"></code>export const financeTheme = {
+<p>  colors: {</p>
+<p>    app: '#070b11',</p>
+<p>    canvas: '#0b1118',</p>
+<p>    surface: {</p>
+<p>      1: '#0f1722',</p>
+<p>      2: '#131d2a',</p>
+<p>      3: '#182434',</p>
+<p>      hover: '#1d2b3d',</p>
+<p>      selected: '#1a3048',</p>
+<p>    },</p>
+<p>    border: {</p>
+<p>      subtle: '#213247',</p>
+<p>      strong: '#2b425b',</p>
+<p>      grid: '#1b2837',</p>
+<p>    },</p>
+<p>    text: {</p>
+<p>      primary: '#e6edf5',</p>
+<p>      secondary: '#a9b7c6',</p>
+<p>      muted: '#6f8297',</p>
+<p>      disabled: '#516172',</p>
+<p>    },</p>
+<p>    market: {</p>
+<p>      gain: '#22c55e',</p>
+<p>      loss: '#ef4444',</p>
+<p>      neutral: '#94a3b8',</p>
+<p>      warning: '#f59e0b',</p>
+<p>      info: '#38bdf8',</p>
+<p>    },</p>
+<p>    accent: {</p>
+<p>      DEFAULT: '#4da3ff',</p>
+<p>      hover: '#6ab2ff',</p>
+<p>      soft: 'rgba(77, 163, 255, 0.16)',</p>
+<p>    },</p>
+<p>  },</p>
+<p>};</p>
+</code></pre>
+<p>---</p>
+<p>## 3. Typography</p>
+<p>### Font Families</p>
+<p>Use two families only.</p>
+<ul>
+<li><strong>UI labels and prose:</strong> <code>Inter, Segoe UI, system-ui, sans-serif</code></li>
+<li><strong>Numerics and market data:</strong> <code>IBM Plex Mono, Cascadia Code, ui-monospace, monospace</code></li>
+</ul>
+<p>Rules:</p>
+<ul>
+<li>All prices, percentages, timestamps, volumes, alert counts, and index values should use the monospace stack</li>
+<li>Headlines and navigation labels stay on the sans stack</li>
+<li>Avoid more than two font families in the app</li>
+</ul>
+<p>### Type Scale</p>
+<p>This dashboard should run smaller than a typical SaaS app.</p>
+<p>| Token | Size / Line Height | Use |</p>
+<p>| --- | --- | --- |</p>
+<p>| <code>text-2xs</code> | 10px / 14px | dense timestamps, micro labels, badge counts |</p>
+<p>| <code>text-xs</code> | 11px / 16px | table headers, metadata, source labels |</p>
+<p>| <code>text-sm</code> | 12px / 18px | default row text, filters, tabs |</p>
+<p>| <code>text-md</code> | 13px / 18px | primary body size for dense cards |</p>
+<p>| <code>text-lg</code> | 14px / 20px | chart header secondary metrics |</p>
+<p>| <code>text-xl</code> | 16px / 22px | symbol price in header, prominent summary numbers |</p>
+<p>| <code>text-2xl</code> | 20px / 24px | portfolio total, large KPI callouts |</p>
+<p>### Weight Usage</p>
+<ul>
+<li><strong>600 / Semibold:</strong> selected symbol, current price, active tab, major section labels</li>
+<li><strong>500 / Medium:</strong> table rows, filter pills, metadata that needs clarity</li>
+<li><strong>400 / Regular:</strong> supporting body copy, non-selected items</li>
+</ul>
+<p>Avoid heavy bolding across the board. Weight should mark importance, not compensate for low contrast.</p>
+<p>### Numeric Formatting Guidance</p>
+<ul>
+<li>Right-align numeric table columns</li>
+<li>Use tabular/monospace digits for all market values</li>
+<li>Prefer 2 decimal places for prices over $1 and 3 to 4 decimals for sub-$1 assets if introduced later</li>
+<li>Percentages should always include sign: <code>+1.24%</code>, <code>-0.81%</code></li>
+</ul>
+<p>---</p>
+<p>## 4. Component Specifications</p>
+<p>### A. Watchlist Panel (Left)</p>
+<p>#### Purpose</p>
+<p>Fast symbol scanning and fast context switching. This should feel closer to a market terminal table than a consumer stock app.</p>
+<p>#### Structure</p>
+<p>Top to bottom:</p>
+<ol>
+<li>Watchlist panel title</li>
+<li>Watchlist tabs</li>
+<li>Table header row</li>
+<li>Scrollable rows</li>
+<li>Optional footer actions</li>
+</ol>
+<p>#### Dimensions</p>
+<ul>
+<li>Panel padding: 12px</li>
+<li>Tab row height: 36px</li>
+<li>Table header height: 28px</li>
+<li><strong>Row height:</strong> 40px default</li>
+<li>Dense mode row height: 34px optional later</li>
+<li>Row horizontal padding: 10px</li>
+<li>Sparkline width: 56px</li>
+<li>Sparkline height: 18px</li>
+</ul>
+<p>#### Column Layout</p>
+<ul>
+<li><strong>Symbol:</strong> 64px min width, left aligned</li>
+<li><strong>Last Price:</strong> 72px to 88px, right aligned, monospace</li>
+<li><strong>Change %:</strong> 64px, right aligned, monospace</li>
+<li><strong>Sparkline:</strong> 56px, right aligned</li>
+</ul>
+<p>Recommended grid:</p>
+<pre><code class="language-text"><code>| Symbol (28%) | Last (28%) | Chg % (24%) | Spark (20%) |
+</code></pre>
+<p>#### Row Anatomy</p>
+<ul>
+<li>Symbol on top-left or left-center, semibold 12px</li>
+<li>Optional company name hidden by default to preserve density</li>
+<li>Last price 12px monospace medium</li>
+<li>Change % 12px monospace semibold</li>
+<li>Sparkline uses 1px stroke, no fill unless needed for contrast</li>
+</ul>
+<p>#### States</p>
+<strong>Default row</strong>
+<ul>
+<li>Background: transparent</li>
+<li>Border-bottom: 1px solid </code>--color-border-subtle<code></li>
+</ul>
+<strong>Hover</strong>
+<ul>
+<li>Background: </code>--color-surface-hover<code></li>
+<li>Cursor: pointer</li>
+</ul>
+<strong>Selected</strong>
+<ul>
+<li>Background: </code>--color-surface-selected<code></li>
+<li>Left accent bar: 2px </code>--color-accent<code></li>
+<li>Symbol text: primary + semibold</li>
+</ul>
+<strong>Keyboard focus</strong>
+<ul>
+<li>Inset outline: 1px solid </code>--color-accent<code></li>
+<li>No heavy glow</li>
+</ul>
+<p>#### Gain/Loss Coding</p>
+<ul>
+<li>Positive row change value: </code>--color-gain<code></li>
+<li>Negative row change value: </code>--color-loss<code></li>
+<li>Neutral or unavailable: </code>--color-neutral<code></li>
+<li>Do not color the full row background red/green; keep the signal focused on numeric fields and tiny sparkline tint</li>
+</ul>
+<p>#### Alert Badges</p>
+<p>Alert badges live on the symbol cell, top-right or trailing edge.</p>
+<ul>
+<li>Badge size: 14px height, min width 14px</li>
+<li>Text size: 10px monospace</li>
+<li>Critical: red fill with dark text or white text depending on contrast</li>
+<li>Important: amber fill</li>
+<li>Info: blue outline or blue dot</li>
+</ul>
+<p>If multiple alert severities exist for a symbol:</p>
+<ul>
+<li>Show highest severity badge only in row</li>
+<li>Full alert breakdown appears in tooltip or detail panel later</li>
+</ul>
+<p>#### Sorting Options</p>
+<p>Provide sortable headers for:</p>
+<ul>
+<li>Symbol</li>
+<li>Last price</li>
+<li>Day change %</li>
+<li>Volume or custom metric later</li>
+</ul>
+<p>Default sorting:</p>
+<ul>
+<li>Manual watchlist order by drag handle later</li>
+<li>Temporary MVP fallback: alphabetical within selected watchlist</li>
+</ul>
+<p>#### Multiple Watchlist Tabs</p>
+<p>Support horizontal tabs above the table.</p>
+<ul>
+<li>Height: 36px</li>
+<li>Active tab: surface-selected background, primary text, bottom border accent</li>
+<li>Inactive tab: secondary text, transparent background</li>
+<li>Max 5 visible tabs before overflow menu</li>
+<li>Include </code>+<code> action button for creating a watchlist</li>
+</ul>
+<p>Examples:</p>
+<pre><code class="language-text"></code>[ Core ] [ Momentum ] [ Earnings ] [ AI Radar ] [ + ]
+</code></pre>
+<p>---</p>
+<p>### B. Chart Panel (Center)</p>
+<p>#### Purpose</p>
+<p>This is the primary decision surface. It should be visually calm, precise, and information rich without becoming noisy.</p>
+<p>#### Overall Structure</p>
+<ol>
+<li>Symbol header</li>
+<li>Range/control row</li>
+<li>Main chart canvas</li>
+<li>Volume subplot</li>
+<li>Future indicator stack or lower module slot</li>
+</ol>
+<p>#### Chart Header</p>
+<p>Height: 56px</p>
+<p>Content order:</p>
+<ul>
+<li>Symbol ticker, semibold 16px</li>
+<li>Company name or market tag, secondary 11px</li>
+<li>Current price, monospace 16px</li>
+<li>Absolute change and percent change, monospace 13px</li>
+<li>Optional mini stats on the right: day high, day low, volume, market cap later</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-text"><code>AAPL   Apple Inc.        189.42   +2.14   +1.14%
+</code></pre>
+<p>#### Lightweight Charts Configuration</p>
+<p>Recommended baseline configuration:</p>
+<ul>
+<li>Chart background: </code>#0b1118<code></li>
+<li>Text color: </code>#a9b7c6<code></li>
+<li>Grid vertical and horizontal lines: </code>#1b2837<code></li>
+<li>Crosshair mode: normal, visible on both panes</li>
+<li>Right price scale visible</li>
+<li>Time scale visible with compact formatting</li>
+<li>Layout padding: minimal</li>
+<li>Last price line visible</li>
+<li>Price line color: </code>#8fb8ff<code></li>
+<li>No animation-heavy transitions on range changes</li>
+</ul>
+<p>Candlestick series:</p>
+<ul>
+<li>Up color: </code>#22c55e<code></li>
+<li>Down color: </code>#ef4444<code></li>
+<li>Wick colors slightly brighter than body</li>
+<li>Border same as body for crisp rendering on dark backgrounds</li>
+</ul>
+<p>Volume subplot:</p>
+<ul>
+<li>Height: 96px to 120px</li>
+<li>Bars keyed to candle direction</li>
+<li>Low opacity fill to avoid competing with price action</li>
+<li>Shared crosshair with main chart</li>
+</ul>
+<p>#### Time Range Selector Design</p>
+<p>Ranges:</p>
+<ul>
+<li></code>1D<code></li>
+<li></code>1W<code></li>
+<li></code>1M<code></li>
+<li></code>3M<code></li>
+<li></code>1Y<code></li>
+<li></code>ALL<code></li>
+</ul>
+<p>Control specs:</p>
+<ul>
+<li>Height: 28px</li>
+<li>Pill padding: 0 10px</li>
+<li>Gap: 6px</li>
+<li>Border radius: 6px</li>
+<li>Default background: surface-2</li>
+<li>Active background: accent-soft</li>
+<li>Active text: accent</li>
+<li>Hover background: surface-hover</li>
+</ul>
+<p>Place directly below the chart header, left aligned.</p>
+<p>#### Crosshair and Tooltip Design</p>
+<p>Crosshair:</p>
+<ul>
+<li>1px dashed or lightly solid line in </code>#6f8297<code></li>
+<li>Visible on both price and volume panes</li>
+</ul>
+<p>Tooltip:</p>
+<ul>
+<li>Floating panel in upper-left or upper-right based on available space</li>
+<li>Background: </code>--color-surface-3<code></li>
+<li>Border: 1px solid </code>--color-border-strong<code></li>
+<li>Padding: 8px 10px</li>
+<li>Radius: 6px</li>
+<li>Font: 11px labels, 12px numeric values</li>
+</ul>
+<p>Tooltip fields:</p>
+<ul>
+<li>Date/time</li>
+<li>Open</li>
+<li>High</li>
+<li>Low</li>
+<li>Close</li>
+<li>Volume</li>
+<li>Change from previous bar optional later</li>
+</ul>
+<p>Use monospace for every numeric value.</p>
+<p>#### Overlays and Indicators Later</p>
+<p>Reserve architecture for overlays without redesign.</p>
+<p>Future controls:</p>
+<ul>
+<li></code>Indicators<code> dropdown</li>
+<li></code>Compare<code> symbol input</li>
+<li>Toggle chips for SMA, EMA, VWAP, RSI, MACD later</li>
+</ul>
+<p>Overlay color order:</p>
+<ol>
+<li>SMA 20: </code>--chart-overlay-1<code></li>
+<li>SMA 50: </code>--chart-overlay-2<code></li>
+<li>VWAP: </code>--chart-overlay-3<code></li>
+</ol>
+<p>Indicators should be detachable or toggleable and never auto-enable by default.</p>
+<p>---</p>
+<p>### C. News Panel (Right)</p>
+<p>#### Purpose</p>
+<p>Explain price movement and surface why the selected symbol matters now.</p>
+<p>#### Layout</p>
+<ul>
+<li>Panel header: 40px</li>
+<li>Filter row: 32px if present</li>
+<li>Scrollable article list</li>
+<li>Default card spacing: 8px</li>
+</ul>
+<p>#### Article Card Design</p>
+<p>Card anatomy:</p>
+<ul>
+<li>Headline, 12px semibold, max 2 lines</li>
+<li>Meta row: source, time, symbol tag, sentiment dot</li>
+<li>Optional summary line in expanded mode</li>
+<li>Optional alert badge if article triggered rule</li>
+</ul>
+<p>Card specs:</p>
+<ul>
+<li>Background: surface-2</li>
+<li>Border: 1px solid border-subtle</li>
+<li>Radius: 8px</li>
+<li>Padding: 10px</li>
+<li>Hover background: surface-hover</li>
+<li>Selected/open state: border-strong + subtle accent tint</li>
+</ul>
+<p>#### Metadata</p>
+<ul>
+<li>Source: 11px secondary</li>
+<li>Time: 11px muted, monospace optional</li>
+<li>Sentiment indicator: 8px dot or small pill</li>
+<li>Sentiment label optional in expanded mode only</li>
+</ul>
+<p>#### Category Tabs / Filters</p>
+<p>Support tabs or segmented filters:</p>
+<ul>
+<li></code>All<code></li>
+<li></code>Symbol<code></li>
+<li></code>Market<code></li>
+<li></code>Filings<code></li>
+<li></code>Sentiment<code></li>
+</ul>
+<p>Default behavior:</p>
+<ul>
+<li>When a stock is selected, open on </code>Symbol<code></li>
+<li>User can switch back to </code>All<code></li>
+</ul>
+<p>#### Compact vs Expanded View</p>
+<strong>Compact mode</strong>
+<ul>
+<li>Headline + one metadata row</li>
+<li>Card height target: 64px to 76px</li>
+<li>Default for desktop density</li>
+</ul>
+<strong>Expanded mode</strong>
+<ul>
+<li>Adds 2-line summary excerpt</li>
+<li>Card height target: 96px to 112px</li>
+<li>User toggle persisted locally</li>
+</ul>
+<p>#### Relationship to Selected Stock</p>
+<ul>
+<li>Selected symbol filters the right panel automatically</li>
+<li>If no symbol-specific articles exist, show market-wide feed with an empty-state note: </code>No fresh symbol-specific news. Showing market feed.<code></li>
+<li>Clicking a different symbol tag inside an article updates global selection</li>
+</ul>
+<p>#### Sentiment Color Coding</p>
+<ul>
+<li>Positive: green dot </code>#22c55e<code></li>
+<li>Negative: red dot </code>#ef4444<code></li>
+<li>Mixed/neutral: slate dot </code>#94a3b8<code></li>
+<li>High-impact or breaking: amber border accent </code>#f59e0b<code></li>
+</ul>
+<p>---</p>
+<p>### D. Top Bar</p>
+<p>#### Search Behavior</p>
+<p>Search is a command input, not just a decorative field.</p>
+<ul>
+<li>Input width: 280px default, expandable to 360px on focus</li>
+<li>Height: 34px</li>
+<li>Placeholder: </code>Search symbol or company<code></li>
+<li>Icon left, 14px</li>
+<li>Clear button on input when populated</li>
+</ul>
+<p>Typeahead behavior:</p>
+<ul>
+<li>Debounce: 150ms</li>
+<li>Results dropdown max height: 320px</li>
+<li>Show ticker, company name, exchange, asset type</li>
+<li>Up/down keyboard navigation</li>
+<li>Enter selects symbol and updates dashboard context</li>
+<li>Escape closes results without clearing current selection</li>
+</ul>
+<p>#### Market Indices Display</p>
+<p>Show 3 mini tickers:</p>
+<ul>
+<li>S&P 500</li>
+<li>NASDAQ</li>
+<li>DOW</li>
+</ul>
+<p>Each ticker block:</p>
+<ul>
+<li>Width: auto, min 88px</li>
+<li>Index label 10px muted</li>
+<li>Value and percent change 11px monospace semibold</li>
+<li>Positive/negative color on delta only, label stays secondary</li>
+</ul>
+<p>#### Portfolio Summary</p>
+<p>Content:</p>
+<ul>
+<li>Total portfolio value</li>
+<li>Day change absolute</li>
+<li>Day change percent</li>
+</ul>
+<p>Specs:</p>
+<ul>
+<li>Value: 16px monospace semibold</li>
+<li>Day change: 12px monospace semibold</li>
+<li>Align right of center cluster</li>
+<li>Positive/negative colors on day change only</li>
+</ul>
+<p>#### Time / Market Status Indicator</p>
+<p>Rightmost cluster:</p>
+<ul>
+<li>Market state pill: </code>OPEN<code>, </code>PRE<code>, </code>AFTER<code>, </code>CLOSED<code></li>
+<li>Local or Eastern time display, monospace 11px</li>
+<li>Use a small status dot plus label</li>
+</ul>
+<p>State colors:</p>
+<ul>
+<li>OPEN: green</li>
+<li>PRE / AFTER: amber</li>
+<li>CLOSED: muted slate</li>
+</ul>
+<p>---</p>
+<p>### E. Alerts Panel (Phase 3)</p>
+<p>#### Role</p>
+<p>Alerts need to feel triaged, not noisy. Severity and recency should be obvious before the user reads the body.</p>
+<p>#### Alert Card Anatomy</p>
+<ul>
+<li>Left severity bar: 3px</li>
+<li>Icon column: 20px</li>
+<li>Content column: title + message + time</li>
+<li>Trailing actions: unread dot or dismiss affordance</li>
+</ul>
+<p>#### Card Specs</p>
+<ul>
+<li>Min height: 64px</li>
+<li>Padding: 10px 12px</li>
+<li>Radius: 8px</li>
+<li>Background: surface-2</li>
+<li>Border: 1px solid border-subtle</li>
+</ul>
+<p>Fields:</p>
+<ul>
+<li>Title: 12px semibold</li>
+<li>Message: 11px secondary, max 2 lines</li>
+<li>Time: 10px muted, monospace</li>
+</ul>
+<p>#### Tier Color Rules</p>
+<ul>
+<li>Critical: left bar red, icon red</li>
+<li>Important: left bar amber, icon amber</li>
+<li>Informational: left bar blue, icon blue</li>
+</ul>
+<p>#### Unread Indicator</p>
+<ul>
+<li>8px filled dot at top-right of card</li>
+<li>Use accent blue by default, not red, to distinguish unread from severity</li>
+</ul>
+<p>#### Dismiss / Mark Read</p>
+<ul>
+<li>Hover reveals trailing action icons</li>
+<li>Single click on card marks as read</li>
+<li>Dismiss icon only on hover or selected state</li>
+<li>Bulk mark-all-read can live in panel header later</li>
+</ul>
+<p>#### Watchlist Alert Badge Relationship</p>
+<ul>
+<li>Watchlist badge count reflects unread alerts for that symbol</li>
+<li>Critical unread alert should override standard count and show critical marker first</li>
+</ul>
+<p>---</p>
+<p>### F. AI Insights Panel (Phase 5)</p>
+<p>#### Design Goal</p>
+<p>AI output must read like an analyst briefing, not a chat transcript.</p>
+<p>#### Presentation Pattern</p>
+<p>Default structure:</p>
+<ol>
+<li>Brief header with generated time and scope</li>
+<li>Summary bullets</li>
+<li>Key risks</li>
+<li>Watch items</li>
+<li>Optional recommended actions or thresholds</li>
+</ol>
+<p>#### Morning Brief Card Layout</p>
+<ul>
+<li>Card padding: 12px</li>
+<li>Section gaps: 10px</li>
+<li>Header line: title + generated time</li>
+<li>Summary bullets: compact list with 4px item gap</li>
+<li>Highlight callouts: use subtle tinted boxes, not loud gradients</li>
+</ul>
+<p>Example sections:</p>
+<ul>
+<li></code>Overnight movers<code></li>
+<li></code>What matters today<code></li>
+<li></code>Risk flags<code></li>
+<li></code>Symbols to watch<code></li>
+</ul>
+<p>#### Expand / Collapse</p>
+<ul>
+<li>Default collapsed to top summary plus first 3 bullets</li>
+<li>Expand reveals full analysis</li>
+<li>Each subsection can be independently collapsed later if insight volume increases</li>
+</ul>
+<p>Rules:</p>
+<ul>
+<li>Preserve scannability first</li>
+<li>Never render long paragraphs by default</li>
+<li>Use bullet structure and labels over narrative blocks</li>
+</ul>
+<p>---</p>
+<p>## 5. Interaction Patterns</p>
+<p>### Stock Selection Flow</p>
+<p>Canonical flow:</p>
+<ol>
+<li>User clicks or keyboard-selects symbol in watchlist</li>
+<li>Selected row updates immediately</li>
+<li>Chart header updates</li>
+<li>Chart data refetch begins</li>
+<li>Existing chart remains visible until new data loads</li>
+<li>Right rail filters to selected-symbol news</li>
+<li>Alert badges and AI context update to same symbol</li>
+</ol>
+<p>Loading guidance:</p>
+<ul>
+<li>Keep previous chart frame visible while next series loads</li>
+<li>Use subtle loading bar or skeleton in header, not a full-panel spinner</li>
+<li>Response should feel continuous, not blanked out</li>
+</ul>
+<p>### Keyboard Navigation</p>
+<p>Power-user shortcuts should be first-class.</p>
+<p>Recommended shortcuts:</p>
+<ul>
+<li></code>/<code> focuses global search</li>
+<li></code>↑<code> / </code>↓<code> moves watchlist selection</li>
+<li></code>Enter<code> confirms current highlighted search result</li>
+<li></code>[<code> and </code>]<code> cycle watchlist tabs</li>
+<li></code>1<code> to </code>6<code> switches chart ranges if no text input is focused</li>
+<li></code>N<code> focuses news panel</li>
+<li></code>W<code> focuses watchlist panel</li>
+<li></code>C<code> focuses chart panel</li>
+<li></code>A` opens alerts panel later</li>
+</ul>
+<p>Focus behavior:</p>
+<ul>
+<li>Focus state must be clearly visible with 1px accent outline</li>
+<li>Keyboard interactions must not depend on mouse hover state</li>
+</ul>
+<p>### Time Range Switching</p>
+<ul>
+<li>Range chips update selected state instantly</li>
+<li>Chart transitions should avoid flashy animation</li>
+<li>Preserve crosshair if feasible, otherwise reset cleanly</li>
+<li>Active range remains visible in header/control row at all times</li>
+</ul>
+<p>### Responsive Behavior</p>
+<p>Collapse order on smaller screens:</p>
+<ol>
+<li>Right panel becomes slide-over drawer</li>
+<li>Right panel filters compress into icon menu</li>
+<li>Top bar indices reduce to abbreviated single-line values</li>
+<li>Left panel narrows</li>
+<li>Left panel becomes drawer only after right panel has already collapsed</li>
+</ol>
+<p>Reasoning: the watchlist remains the fastest way to pivot context, so it should survive longer than the news feed.</p>
+<p>---</p>
+<p>## 6. Data Density Guidelines</p>
+<p>Target a density closer to professional terminals than mainstream consumer dashboards, but with cleaner grouping and contrast.</p>
+<p>### Density Rules</p>
+<ul>
+<li>Default text should mostly live in the 11px to 13px range</li>
+<li>Avoid decorative hero spacing entirely</li>
+<li>Use 8px spacing grid, with 4px allowed inside compact rows/cards</li>
+<li>Minimize redundant labels when context already provides meaning</li>
+<li>Prefer tables, rows, and aligned numeric columns over oversized cards</li>
+</ul>
+<p>### Numeric Presentation</p>
+<ul>
+<li>All prices, percent changes, volumes, timestamps, and counts use monospace</li>
+<li>Right-align numeric columns for vertical scan efficiency</li>
+<li>Preserve plus/minus sign and consistent decimals</li>
+</ul>
+<p>### Conditional Formatting</p>
+<p>Use conditional formatting aggressively but precisely:</p>
+<ul>
+<li>Green and red for deltas, candle direction, sentiment shift when relevant</li>
+<li>Amber for risk, premarket/after-hours, unusual conditions</li>
+<li>Blue for selection, informational status, AI/system context</li>
+</ul>
+<p>### Sparklines</p>
+<p>Use sparklines where a full chart would waste space.</p>
+<p>Good sparkline placements:</p>
+<ul>
+<li>Watchlist rows</li>
+<li>Portfolio row summaries</li>
+<li>Alert context previews later</li>
+</ul>
+<p>Sparkline rules:</p>
+<ul>
+<li>1px to 1.5px stroke</li>
+<li>No axes</li>
+<li>Last point may use a subtle end dot if needed</li>
+<li>Color should reflect direction over selected range</li>
+</ul>
+<p>### Whitespace Philosophy</p>
+<p>Whitespace is a tool for grouping, not decoration.</p>
+<ul>
+<li>Every gap should separate meaningfully different information</li>
+<li>Prefer tighter vertical rhythm inside tables and feeds</li>
+<li>Give the chart breathing room, but compress repetitive list UI</li>
+<li>If a row can be understood at 40px height, do not make it 56px</li>
+</ul>
+<p>---</p>
+<p>## 7. Reference Analysis</p>
+<p>### What TradingView Does Well</p>
+<ul>
+<li>Best-in-class chart clarity on dark backgrounds</li>
+<li>Crosshair behavior feels precise and useful</li>
+<li>Range selectors and chart controls stay compact</li>
+<li>The chart remains the star without losing utility chrome</li>
+</ul>
+<p>We should borrow:</p>
+<ul>
+<li>chart calmness</li>
+<li>disciplined gridlines</li>
+<li>predictable crosshair tooltips</li>
+<li>compact range toggles</li>
+</ul>
+<p>### What Bloomberg Does Well</p>
+<ul>
+<li>Extreme data density</li>
+<li>Efficient use of color as semantic signal</li>
+<li>Keyboard-first workflows</li>
+<li>Multiple contexts visible at the same time</li>
+</ul>
+<p>We should borrow:</p>
+<ul>
+<li>scan-first layout logic</li>
+<li>terminal-like hierarchy for market data</li>
+<li>multi-panel persistence</li>
+<li>low-whitespace bias</li>
+</ul>
+<p>### What Robinhood Does Well</p>
+<ul>
+<li>Clean hierarchy</li>
+<li>Simple card anatomy</li>
+<li>Good restraint in use of accent color</li>
+<li>Fast emotional readability for gain/loss</li>
+</ul>
+<p>We should borrow:</p>
+<ul>
+<li>simplicity in card construction</li>
+<li>restraint around visual noise</li>
+<li>clean typography hierarchy for summaries</li>
+</ul>
+<p>### What We Will Do Differently</p>
+<p>This product should combine density and clarity rather than picking one side.</p>
+<ul>
+<li>More information visible at once than Robinhood</li>
+<li>Cleaner and more modern than Bloomberg</li>
+<li>Less tool-heavy and less intimidating than TradingView full terminal mode</li>
+<li>Stronger connection between watchlist, chart, news, alerts, and AI insight than any single reference</li>
+</ul>
+<p>The result should feel like a <strong>personal market operations console</strong>:</p>
+<ul>
+<li>dense enough for a power user</li>
+<li>calm enough for daily use</li>
+<li>structured enough that Shallan can implement it consistently without reinterpretation</li>
+</ul>
+<p>---</p>
+<p>## Implementation Notes for Shallan</p>
+<p>### Priority Order</p>
+<ol>
+<li>Nail the 3-column shell and spacing system first</li>
+<li>Implement tokens and typography before component styling</li>
+<li>Build watchlist row density correctly before adding decorative detail</li>
+<li>Get chart header + range controls aligned before deep chart polish</li>
+<li>Keep the right rail compact by default</li>
+</ol>
+<p>### Non-Negotiables</p>
+<ul>
+<li>Dark theme tokens must drive the entire UI</li>
+<li>Monospace numerics are mandatory</li>
+<li>Watchlist rows must remain compact</li>
+<li>Chart is the focal surface</li>
+<li>Selected symbol state must drive chart, news, alerts, and AI context</li>
+<li>Right panel should never overpower the chart visually</li>
+</ul>
+<p>### Acceptance Criteria</p>
+<p>The dashboard implementation is on spec when:</p>
+<ul>
+<li>a symbol can be scanned, selected, and understood in under 2 seconds</li>
+<li>the chart dominates without isolating the user from context</li>
+<li>gain/loss state is readable from peripheral vision</li>
+<li>the UI feels denser than a normal web app but still cleaner than a terminal</li>
+<li>panel proportions hold up at 1440px and 1920px widths</li>
+</ul>
+
+</body>
+</html>
