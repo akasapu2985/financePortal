@@ -89,6 +89,20 @@
 6. Never repeat large code blocks back to the user — summarize instead
 **Why:** Token usage is expensive. Context grows exponentially from older responses. Lean communication is a production team requirement.
 
+### 2026-05-25T15:28:43-07:00: FinBERT Sentiment Scoring
+**By:** Kaladin
+**What:** Implement FinBERT sentiment scoring in `pipeline/src/intelligence/finbert.py` as a lazy-loaded `ProsusAI/finbert` wrapper that batches CPU headline inference, annotates article dictionaries with `finbert_label` and `finbert_score`, and flags low-confidence neutral headlines with `should_forward_to_llm = false` so only passing articles continue to downstream LLM analysis.
+**Why:** The pipeline pivot makes MCP the only interface, so sentiment gating needs to happen inside the pipeline flow before OpenRouter analysis. Keeping the model load lazy avoids startup cost for collectors and scheduler processes that may import intelligence helpers without needing immediate inference.
+**Dependency Note:** The active Python runtime is still synced through `backend/pyproject.toml`, so `transformers` and `torch` are registered there even though the scorer module lives under `pipeline/src/`.
+**GitHub Issue:** #83
+
+### 2026-05-25T15:28:43-07:00: Signal Extraction Envelope Decision
+**By:** Kaladin
+**What:** Standardize article extraction responses on a JSON envelope: successful extractions return `{"status":"signal","signal":{...}}`, while failure paths return `{"status":"no_signal",...}` or `{"status":"ambiguous",...}`. The success payload inside `signal` is the canonical schema with `{ticker, signal_type, sentiment, confidence, summary, catalysts, risks, time_horizon}`.
+**Why:** Hermes-facing pipeline code needs deterministic handling for articles that have no tradeable signal or contain conflicting narratives; a status envelope preserves the requested signal schema while making failure states explicit and machine-safe.
+**Follow-up:** Future prompt versions and eval runs should preserve this envelope contract so parser logic and downstream MCP consumers stay stable.
+**GitHub Issue:** #86
+
 ## Governance
 
 - All meaningful changes require team consensus
