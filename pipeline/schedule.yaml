@@ -1,0 +1,18 @@
+timezone: UTC
+collectors:
+  prices:
+    job_id: price-collector
+    trigger: cron
+    timezone: America/New_York
+    market_hours_only: true
+    run_on_startup: true
+    cron:
+      day_of_week: mon-fri
+      hour: 16
+      minute: 0
+  news:
+    job_id: news-collector
+    trigger: interval
+    run_on_startup: true
+    interval:
+      minutes: 15
