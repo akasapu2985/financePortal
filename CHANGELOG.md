@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **[Kaladin] Ticker-aware portfolio pre-filter**: Added `pipeline/src/filters/ticker_filter.py` plus `pipeline/tests/test_ticker_filter.py` for issue #82, compiling boundary-aware ticker regexes against article headline/body text, returning matched tickers with each article, and covering exact-match, edge-case, multi-ticker, no-match, and throughput benchmark scenarios.
 - **[Adolin] GitHub issue restructure for intelligence pipeline pivot**: Closed 12 obsolete issues (#32-35, #42-44, #54-56, #65-66). Created 25 new issues (#76-100) covering Phases 1-4 of the new pipeline architecture (Foundation, Intelligence, Hermes MCP, Advanced Signals). Updated 18 existing issues (#47-53, #58-61, #69-75) with pivot context. Updated phase label descriptions. Recorded architecture pivot decision in decisions.md.
 
 ### Added (previously)
