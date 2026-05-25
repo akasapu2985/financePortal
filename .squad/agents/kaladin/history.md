@@ -16,3 +16,4 @@
 - 2026-05-24T19:51:02Z — Team update: Navani schema + migrations ready, Renarin design spec ready, Adolin 75-issue backlog ready. Awaiting Phase 1 smoke test from Jasnah.
 - 2026-05-25T15:28:43-07:00 — Scheduler ownership now lives at `pipeline/src/scheduler.py` with YAML defaults in `pipeline/schedule.yaml`, while `backend/src/collectors/scheduler.py` remains a compatibility bridge so existing tests/imports keep working during the pipeline pivot.
 - 2026-05-25T15:28:43-07:00 — Scheduler config now prefers YAML defaults and only switches cadence via explicit env overrides like `PRICES_COLLECTION_INTERVAL_MINUTES` or `*_SCHEDULE_CRON`, preventing `.env.example` from silently overriding the pipeline schedule.
+- 2026-05-25T15:28:43-07:00 — Team update: Issue #81 pipeline scheduler complete. PR #101 opened. Jasnah's test suite passing (18 tests, 2 skipped). Ready for review. Decisions archived.
