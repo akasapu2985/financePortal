@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **[Adolin] GitHub issue restructure for intelligence pipeline pivot**: Closed 12 obsolete issues (#32-35, #42-44, #54-56, #65-66). Created 25 new issues (#76-100) covering Phases 1-4 of the new pipeline architecture (Foundation, Intelligence, Hermes MCP, Advanced Signals). Updated 18 existing issues (#47-53, #58-61, #69-75) with pivot context. Updated phase label descriptions. Recorded architecture pivot decision in decisions.md.
+- **[Kaladin] Headline embedding deduplication filter**: Added `pipeline/src/filters/deduplication.py` for sentence-transformers headline embeddings with 7-day cosine similarity matching, configurable thresholds, JSON-storable embedding output, and coverage in `pipeline/tests/test_deduplication.py` for unique, duplicate, threshold, and empty-corpus flows.
 
 ### Added (previously)
 - Added root `setup.ps1` to bootstrap fresh Windows machines with prerequisite checks, winget-based installs for Docker Desktop/Python 3.12/Node.js LTS/GitHub CLI, official `uv` installation, Playwright Chromium setup, PATH fixups, `npm install`, and an end-of-run summary
