@@ -1,0 +1,345 @@
+[
+  {
+    "id": "case-01",
+    "headline": "Apple beats holiday-quarter expectations and lifts iPhone outlook",
+    "body": "Apple reported fiscal first-quarter revenue above Wall Street expectations, citing stronger iPhone Pro demand and services growth. Management also raised second-quarter revenue guidance and said gross margin should expand modestly.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "AAPL",
+        "signal_type": "earnings_surprise",
+        "sentiment": "bullish",
+        "confidence": 0.95,
+        "summary": "Apple beat expectations and lifted near-term guidance on stronger iPhone demand.",
+        "catalysts": ["Revenue beat", "Raised second-quarter outlook"],
+        "risks": ["China demand remains uneven"],
+        "time_horizon": "short_term"
+      }
+    }
+  },
+  {
+    "id": "case-02",
+    "headline": "Nike misses margin expectations as inventories stay elevated",
+    "body": "Nike posted quarterly sales roughly in line with consensus but gross margin fell more than analysts expected after additional promotions. Executives warned that North America demand remains choppy into the next quarter.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "NKE",
+        "signal_type": "earnings_surprise",
+        "sentiment": "bearish",
+        "confidence": 0.9,
+        "summary": "Nike's weaker margins and cautious commentary point to downside pressure after earnings.",
+        "catalysts": ["Gross margin miss", "Soft North America outlook"],
+        "risks": ["Promotional activity could normalize faster than expected"],
+        "time_horizon": "short_term"
+      }
+    }
+  },
+  {
+    "id": "case-03",
+    "headline": "Salesforce raises full-year profit guidance after strong renewals",
+    "body": "Salesforce said enterprise renewals improved late in the quarter and raised its full-year operating margin and earnings guidance. The company kept revenue guidance intact but highlighted improving deal conversion.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "CRM",
+        "signal_type": "guidance_change",
+        "sentiment": "bullish",
+        "confidence": 0.88,
+        "summary": "Salesforce's higher profit outlook signals better execution and renewals momentum.",
+        "catalysts": ["Raised full-year operating margin guidance", "Improved enterprise renewals"],
+        "risks": ["Revenue guidance was unchanged"],
+        "time_horizon": "medium_term"
+      }
+    }
+  },
+  {
+    "id": "case-04",
+    "headline": "Snowflake cuts product revenue forecast amid slower cloud optimization recovery",
+    "body": "Snowflake lowered its fiscal-year product revenue forecast, saying customer optimization behavior is persisting longer than expected. Management said large-deal timing remains unpredictable in the second half.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "SNOW",
+        "signal_type": "guidance_change",
+        "sentiment": "bearish",
+        "confidence": 0.93,
+        "summary": "Snowflake reduced forward guidance because optimization headwinds are lasting longer than expected.",
+        "catalysts": ["Cut fiscal-year product revenue forecast", "Weak large-deal visibility"],
+        "risks": ["Consumption trends could recover faster"],
+        "time_horizon": "medium_term"
+      }
+    }
+  },
+  {
+    "id": "case-05",
+    "headline": "Chevron to acquire Hess in all-stock deal focused on Guyana exposure",
+    "body": "Chevron agreed to buy Hess in an all-stock transaction valued at $53 billion, adding a major stake in Guyana's offshore assets. Chevron expects the deal to be accretive to free cash flow within a year of closing.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "HES",
+        "signal_type": "m&a",
+        "sentiment": "bullish",
+        "confidence": 0.91,
+        "summary": "Hess shares gain a takeover catalyst from Chevron's all-stock acquisition offer.",
+        "catalysts": ["$53 billion acquisition agreement", "Exposure to Guyana assets"],
+        "risks": ["Regulatory or arbitration delays could slow closing"],
+        "time_horizon": "medium_term"
+      }
+    }
+  },
+  {
+    "id": "case-06",
+    "headline": "Paramount explores merger that could dilute existing shareholders",
+    "body": "Paramount Global said its special committee is evaluating a merger proposal that would combine the media company with a rival streaming operator. Investors focused on the possibility of a large equity issuance and asset sales tied to the plan.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "PARA",
+        "signal_type": "m&a",
+        "sentiment": "bearish",
+        "confidence": 0.79,
+        "summary": "The proposed merger introduces dilution and restructuring risk for Paramount shareholders.",
+        "catalysts": ["Merger proposal under review", "Potential equity issuance"],
+        "risks": ["A cleaner bid could emerge"],
+        "time_horizon": "medium_term"
+      }
+    }
+  },
+  {
+    "id": "case-07",
+    "headline": "FDA issues complete response letter for small-cap biotech liver therapy",
+    "body": "The FDA declined to approve Madrigal competitor HepaNova's experimental liver therapy, citing manufacturing deficiencies and the need for additional safety follow-up. Shares fell sharply in premarket trading.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "HEPA",
+        "signal_type": "regulatory",
+        "sentiment": "bearish",
+        "confidence": 0.97,
+        "summary": "An FDA complete response letter creates a major regulatory setback for HepaNova.",
+        "catalysts": ["FDA complete response letter", "Manufacturing deficiencies flagged"],
+        "risks": ["Resubmission timeline is still uncertain"],
+        "time_horizon": "medium_term"
+      }
+    }
+  },
+  {
+    "id": "case-08",
+    "headline": "Coinbase rallies after SEC signals progress on spot crypto ETF framework",
+    "body": "The SEC released a framework update that analysts said improves the odds of additional spot crypto ETF approvals. Coinbase, which provides custody for multiple issuers, rose on expectations of higher institutional activity.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "COIN",
+        "signal_type": "regulatory",
+        "sentiment": "bullish",
+        "confidence": 0.84,
+        "summary": "A more favorable SEC framework could support Coinbase through higher ETF-related activity.",
+        "catalysts": ["Improved ETF approval odds", "Custody demand tailwind"],
+        "risks": ["Regulatory implementation details remain open"],
+        "time_horizon": "medium_term"
+      }
+    }
+  },
+  {
+    "id": "case-09",
+    "headline": "S&P 500 futures rise as Fed officials open door to summer rate cuts",
+    "body": "Two Federal Reserve officials said disinflation is broadening and the central bank could begin cutting rates this summer if labor markets remain orderly. Equity index futures and rate-sensitive sectors outperformed in early trading.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "SPY",
+        "signal_type": "macro",
+        "sentiment": "bullish",
+        "confidence": 0.82,
+        "summary": "Dovish Fed commentary boosts broad equities through lower-rate expectations.",
+        "catalysts": ["Potential summer rate cuts", "Rate-sensitive sectors outperforming"],
+        "risks": ["Inflation data could reverse the narrative"],
+        "time_horizon": "short_term"
+      }
+    }
+  },
+  {
+    "id": "case-10",
+    "headline": "Hot CPI print knocks futures lower and pushes Treasury yields up",
+    "body": "U.S. consumer prices rose more than expected in April, prompting traders to price out near-term Federal Reserve easing. Mega-cap technology stocks and homebuilders led the premarket decline while Treasury yields climbed.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "SPY",
+        "signal_type": "macro",
+        "sentiment": "bearish",
+        "confidence": 0.89,
+        "summary": "A hotter CPI reading pressures equities by delaying rate-cut expectations.",
+        "catalysts": ["CPI above consensus", "Treasury yields moving higher"],
+        "risks": ["Markets may fade the move if subsequent data cools"],
+        "time_horizon": "short_term"
+      }
+    }
+  },
+  {
+    "id": "case-11",
+    "headline": "Tesla director buys $5 million of stock after recent pullback",
+    "body": "A Tesla board member disclosed an open-market purchase of roughly $5 million in shares, according to a Form 4 filing. The buy came days after a sharp selloff tied to softer vehicle delivery expectations.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "TSLA",
+        "signal_type": "insider",
+        "sentiment": "bullish",
+        "confidence": 0.86,
+        "summary": "A sizable insider purchase suggests confidence after Tesla's recent pullback.",
+        "catalysts": ["$5 million insider purchase", "Form 4 filing"],
+        "risks": ["Fundamentals may continue to weaken despite insider support"],
+        "time_horizon": "short_term"
+      }
+    }
+  },
+  {
+    "id": "case-12",
+    "headline": "Nvidia CFO sells part of stake under prearranged trading plan",
+    "body": "An SEC filing showed Nvidia's chief financial officer sold roughly $18 million worth of shares as part of a previously disclosed Rule 10b5-1 plan. The stock remained near record highs following the transaction.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "NVDA",
+        "signal_type": "insider",
+        "sentiment": "neutral",
+        "confidence": 0.62,
+        "summary": "An insider sale is a watch item, but the planned nature of the transaction softens the signal.",
+        "catalysts": ["$18 million insider sale", "Rule 10b5-1 plan disclosed"],
+        "risks": ["Prearranged sales often have limited predictive value"],
+        "time_horizon": "short_term"
+      }
+    }
+  },
+  {
+    "id": "case-13",
+    "headline": "Microsoft unveils redesigned Teams features at annual developer event",
+    "body": "Microsoft showcased new Teams collaboration features, including AI-generated meeting summaries and improved integrations with internal workflow tools. The announcement did not include pricing changes, customer wins, or updated financial targets.",
+    "expected": {
+      "status": "no_signal",
+      "reason": "Product updates without quantified financial impact or a tradable catalyst should not be extracted as a market signal."
+    }
+  },
+  {
+    "id": "case-14",
+    "headline": "Reports conflict on whether Microsoft or another bidder is leading Activision talks",
+    "body": "Two media reports gave conflicting accounts of renewed acquisition interest around Activision Blizzard, with one naming Microsoft and another pointing to a private-equity consortium. Neither report cited documents or board confirmation.",
+    "expected": {
+      "status": "ambiguous",
+      "reason": "The article presents conflicting takeover narratives and does not support one clear signal extraction.",
+      "candidate_tickers": ["MSFT", "ATVI"]
+    }
+  },
+  {
+    "id": "case-15",
+    "headline": "Dell beats on AI server demand and sees backlog extending into next year",
+    "body": "Dell reported stronger-than-expected infrastructure revenue, driven by AI server orders from enterprise and cloud customers. Management said the AI backlog now stretches into next fiscal year and supports continued margin expansion.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "DELL",
+        "signal_type": "earnings_surprise",
+        "sentiment": "bullish",
+        "confidence": 0.92,
+        "summary": "Dell's earnings beat and expanding AI server backlog support a positive post-earnings read-through.",
+        "catalysts": ["Infrastructure revenue beat", "AI server backlog extended"],
+        "risks": ["Enterprise hardware spending can remain cyclical"],
+        "time_horizon": "short_term"
+      }
+    }
+  },
+  {
+    "id": "case-16",
+    "headline": "Southwest trims second-half capacity plan and warns on unit revenue",
+    "body": "Southwest Airlines said it will reduce second-half capacity growth after softer domestic bookings and aircraft delivery delays. The company also lowered its outlook for unit revenue trends in the current quarter.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "LUV",
+        "signal_type": "guidance_change",
+        "sentiment": "bearish",
+        "confidence": 0.9,
+        "summary": "Southwest lowered operating expectations as demand and aircraft constraints pressure the outlook.",
+        "catalysts": ["Capacity plan trimmed", "Unit revenue outlook reduced"],
+        "risks": ["Fuel or fare conditions could improve later in the year"],
+        "time_horizon": "medium_term"
+      }
+    }
+  },
+  {
+    "id": "case-17",
+    "headline": "Amazon to buy healthcare subscription startup in strategic tuck-in deal",
+    "body": "Amazon agreed to acquire private startup CareLane to deepen its consumer healthcare offering. Analysts said the purchase is small financially but strategically relevant for Amazon's cross-selling ambitions in pharmacy and primary care.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "AMZN",
+        "signal_type": "m&a",
+        "sentiment": "bullish",
+        "confidence": 0.74,
+        "summary": "Amazon's tuck-in acquisition supports its longer-term healthcare expansion strategy.",
+        "catalysts": ["Strategic healthcare acquisition", "Cross-sell opportunity in pharmacy"],
+        "risks": ["Near-term financial impact is likely modest"],
+        "time_horizon": "long_term"
+      }
+    }
+  },
+  {
+    "id": "case-18",
+    "headline": "Alphabet hit with fresh EU antitrust fine tied to ad-tech practices",
+    "body": "European regulators fined Alphabet €3.2 billion and ordered changes to parts of its advertising technology business. Analysts said the ruling could pressure margins and complicate product bundling in Europe.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "GOOGL",
+        "signal_type": "regulatory",
+        "sentiment": "bearish",
+        "confidence": 0.94,
+        "summary": "The EU fine and mandated ad-tech changes create a negative regulatory overhang for Alphabet.",
+        "catalysts": ["€3.2 billion antitrust fine", "Required ad-tech business changes"],
+        "risks": ["Alphabet could appeal or limit the operational impact"],
+        "time_horizon": "medium_term"
+      }
+    }
+  },
+  {
+    "id": "case-19",
+    "headline": "Gold ETF demand rises as bond yields slide after weak payrolls report",
+    "body": "A softer-than-expected U.S. payrolls report pushed Treasury yields lower and revived expectations for central-bank easing. Gold prices rose and ETF inflows accelerated as investors rotated toward defensive real assets.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "GLD",
+        "signal_type": "macro",
+        "sentiment": "bullish",
+        "confidence": 0.8,
+        "summary": "Weaker payrolls data supports gold through lower yields and renewed easing expectations.",
+        "catalysts": ["Treasury yields moved lower", "Gold ETF inflows accelerated"],
+        "risks": ["A rebound in yields could reverse the move"],
+        "time_horizon": "short_term"
+      }
+    }
+  },
+  {
+    "id": "case-20",
+    "headline": "JPMorgan director adds to holdings after regional-bank volatility",
+    "body": "A JPMorgan director purchased $1.8 million of stock on the open market, according to a late Friday SEC filing. The transaction follows a week of volatility across regional banks and renewed debate over deposit competition.",
+    "expected": {
+      "status": "signal",
+      "signal": {
+        "ticker": "JPM",
+        "signal_type": "insider",
+        "sentiment": "bullish",
+        "confidence": 0.83,
+        "summary": "A director's open-market purchase signals confidence during sector volatility.",
+        "catalysts": ["$1.8 million insider purchase", "Sector stress backdrop"],
+        "risks": ["Broader banking contagion could outweigh insider support"],
+        "time_horizon": "short_term"
+      }
+    }
+  }
+]
