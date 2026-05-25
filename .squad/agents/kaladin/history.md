@@ -18,3 +18,5 @@
 - 2026-05-25T15:28:43-07:00 — Scheduler config now prefers YAML defaults and only switches cadence via explicit env overrides like `PRICES_COLLECTION_INTERVAL_MINUTES` or `*_SCHEDULE_CRON`, preventing `.env.example` from silently overriding the pipeline schedule.
 - 2026-05-25T15:28:43-07:00 — Team update: Issue #81 pipeline scheduler complete. PR #101 opened. Jasnah's test suite passing (18 tests, 2 skipped). Ready for review. Decisions archived.
 - 2026-05-25T15:28:43-07:00 — OpenRouter intelligence calls now live under `pipeline/src/intelligence/openrouter.py` as an async `httpx` client with injectable transport/sleep hooks for mocked tests, DeepSeek default model selection, retry/backoff behavior, and per-request token-usage logging.
+- 2026-05-25T15:35:00-07:00 — Phase 2 intelligence milestone complete: Issue #85 (OpenRouter client) PR #102, Issue #82 (ticker-aware pre-filter) PR #103, Issue #84 (headline deduplication) PR #104 all opened and passing. Pipeline now has signal filtering (ticker regex + semantic dedup) before LLM analysis.
+
