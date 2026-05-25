@@ -1,6 +1,6 @@
 # financePortal
 
-financePortal is a personal financial intelligence dashboard that combines a FastAPI backend, scheduled market-data collectors, PostgreSQL/TimescaleDB storage, and a JavaScript workspace for future UI automation and frontend work. Phase 1 focuses on getting the backend foundation production-track: seeded instruments, price and news collection, and API endpoints that expose the collected data.
+financePortal is a personal financial intelligence pipeline that combines backend collectors, PostgreSQL/TimescaleDB storage, a pipeline scheduler, and MCP-facing services for Hermes. Phase 1 focuses on getting the gathering layer production-track: seeded instruments, price and news collection, and the scheduler/runtime needed to keep that data fresh.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ python -m uv run --directory backend python src\seed.py
 ### Notes
 
 - `docker-compose up -d db` starts the TimescaleDB/PostgreSQL container used by the backend.
-- `.\start.ps1` is the end-to-end bootstrap shortcut: it syncs Python dependencies, waits for PostgreSQL, applies migrations, seeds instruments, starts the scheduler, and launches the API.
+- `.\start.ps1` is the end-to-end bootstrap shortcut: it syncs Python dependencies, waits for PostgreSQL, applies migrations, seeds instruments, starts the pipeline scheduler, and launches the API.
 
 ## Phase 1 verification
 
@@ -53,8 +53,10 @@ python -m uv run --directory backend ruff check .
 ## Project structure
 
 - `backend/src/api/` — FastAPI app and route modules
-- `backend/src/collectors/` — scheduled price/news collection jobs and scheduler
+- `backend/src/collectors/` — price/news collector implementations plus compatibility exports for the scheduler
 - `backend/src/db/` — asyncpg connection helpers and SQL migrations
+- `pipeline/src/` — pipeline-facing orchestration entrypoints such as the APScheduler runner
+- `pipeline/schedule.yaml` — default collector schedule configuration
 - `backend/src/seed.py` — default instrument seeding workflow
 - `backend/tests/` — backend pytest coverage, including integration smoke tests
 - `docker-compose.yml` — local TimescaleDB/PostgreSQL service definition

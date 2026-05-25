@@ -1,117 +1,58 @@
-"""APScheduler runner for backend collectors."""
+"""Backward-compatible exports for the pipeline scheduler."""
 
 from __future__ import annotations
 
 import asyncio
-import logging
-import signal
-from datetime import datetime, time
-from zoneinfo import ZoneInfo
-
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-from collectors.news import collect_news
-from collectors.prices import collect_prices
-from config import get_env_int, load_environment
-from db.connection import close_pool, get_pool
-
-logger = logging.getLogger(__name__)
-_MARKET_TIMEZONE = ZoneInfo("America/New_York")
+import importlib.util
+import sys
+from pathlib import Path
 
 
-def is_market_hours(current_time: datetime | None = None) -> bool:
-    """Return True when the NYSE is open on a regular trading day."""
-    now = (
-        current_time.astimezone(_MARKET_TIMEZONE)
-        if current_time
-        else datetime.now(_MARKET_TIMEZONE)
-    )
-    if now.weekday() > 4:
-        return False
-    market_open = time(hour=9, minute=30)
-    market_close = time(hour=16, minute=0)
-    return market_open <= now.time() < market_close
+def _load_pipeline_scheduler():
+    module_path = Path(__file__).resolve().parents[3] / "pipeline" / "src" / "scheduler.py"
+    spec = importlib.util.spec_from_file_location("pipeline_scheduler", module_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Unable to load pipeline scheduler from {module_path}")
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-async def get_symbols() -> list[str]:
-    """Load tracked symbols from the instruments table."""
-    pool = await get_pool()
-    async with pool.acquire() as connection:
-        rows = await connection.fetch("SELECT symbol FROM instruments ORDER BY symbol")
-    return [row["symbol"] for row in rows]
+_pipeline_scheduler = _load_pipeline_scheduler()
 
+CollectorSchedule = _pipeline_scheduler.CollectorSchedule
+SchedulerJobState = _pipeline_scheduler.SchedulerJobState
+SchedulerSettings = _pipeline_scheduler.SchedulerSettings
+build_scheduler_state_snapshot = _pipeline_scheduler.build_scheduler_state_snapshot
+configure_scheduler = _pipeline_scheduler.configure_scheduler
+get_symbols = _pipeline_scheduler.get_symbols
+is_market_hours = _pipeline_scheduler.is_market_hours
+load_scheduler_settings = _pipeline_scheduler.load_scheduler_settings
+log_scheduler_state = _pipeline_scheduler.log_scheduler_state
+run_job = _pipeline_scheduler.run_job
+run_news_collection = _pipeline_scheduler.run_news_collection
+run_price_collection = _pipeline_scheduler.run_price_collection
+run_scheduler = _pipeline_scheduler.run_scheduler
+main = _pipeline_scheduler.main
 
-async def run_price_collection() -> None:
-    """Collect prices during US market hours."""
-    if not is_market_hours():
-        logger.info("Skipping price collection outside market hours")
-        return
-
-    symbols = await get_symbols()
-    if not symbols:
-        logger.info("Skipping price collection because no instruments are seeded")
-        return
-
-    await collect_prices(symbols)
-
-
-async def run_news_collection() -> None:
-    """Collect the latest news for tracked symbols."""
-    symbols = await get_symbols()
-    if not symbols:
-        logger.info("Skipping news collection because no instruments are seeded")
-        return
-
-    await collect_news(symbols)
-
-
-async def run_scheduler(stop_event: asyncio.Event | None = None) -> None:
-    """Start the scheduler and keep it alive until shutdown is requested."""
-    load_environment()
-    await get_pool()
-
-    scheduler = AsyncIOScheduler(timezone="UTC")
-    scheduler.add_job(
-        run_price_collection,
-        "interval",
-        minutes=get_env_int("PRICES_COLLECTION_INTERVAL_MINUTES", 5),
-        max_instances=1,
-        coalesce=True,
-        id="price-collector",
-    )
-    scheduler.add_job(
-        run_news_collection,
-        "interval",
-        minutes=get_env_int("NEWS_COLLECTION_INTERVAL_MINUTES", 15),
-        max_instances=1,
-        coalesce=True,
-        id="news-collector",
-    )
-    scheduler.start()
-    logger.info("Collector scheduler started")
-
-    shutdown_event = stop_event or asyncio.Event()
-    try:
-        await run_price_collection()
-        await run_news_collection()
-        await shutdown_event.wait()
-    finally:
-        scheduler.shutdown(wait=False)
-        await close_pool()
-        logger.info("Collector scheduler stopped")
-
-
-async def main() -> None:
-    """Run the scheduler until the process receives a shutdown signal."""
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
-    stop_event = asyncio.Event()
-    loop = asyncio.get_running_loop()
-    for signal_name in (signal.SIGINT, signal.SIGTERM):
-        try:
-            loop.add_signal_handler(signal_name, stop_event.set)
-        except NotImplementedError:
-            pass
-    await run_scheduler(stop_event)
+__all__ = [
+    "CollectorSchedule",
+    "SchedulerJobState",
+    "SchedulerSettings",
+    "build_scheduler_state_snapshot",
+    "configure_scheduler",
+    "get_symbols",
+    "is_market_hours",
+    "load_scheduler_settings",
+    "log_scheduler_state",
+    "main",
+    "run_job",
+    "run_news_collection",
+    "run_price_collection",
+    "run_scheduler",
+]
 
 
 if __name__ == "__main__":
