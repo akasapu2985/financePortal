@@ -5,9 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **[Adolin] GitHub issue restructure for intelligence pipeline pivot**: Closed 12 obsolete issues (#32-35, #42-44, #54-56, #65-66). Created 25 new issues (#76-100) covering Phases 1-4 of the new pipeline architecture (Foundation, Intelligence, Hermes MCP, Advanced Signals). Updated 18 existing issues (#47-53, #58-61, #69-75) with pivot context. Updated phase label descriptions. Recorded architecture pivot decision in decisions.md.
+
+### Added (previously)
 - Added root `setup.ps1` to bootstrap fresh Windows machines with prerequisite checks, winget-based installs for Docker Desktop/Python 3.12/Node.js LTS/GitHub CLI, official `uv` installation, Playwright Chromium setup, PATH fixups, `npm install`, and an end-of-run summary
 - Kaladin recorded the PATH persistence decision for setup bootstrap behavior in `.squad/decisions/inbox/kaladin-setup-path-fixups.md`
 - Seeded a default backend watchlist with MSFT, MRAM, DELL, and AMZN so the dashboard has starter data on first load
+- **[Dalinar] Architecture pivot**: Rewrote `Plans/architecture.html` to reflect the intelligence pipeline design (Gather → Filter → Analyze → Serve). Covers Signal Store schema, FinBERT pre-filter, DeepSeek batched analysis, Context Builder, MCP server tools, and Telegram delivery. Explicit scope exclusions: no dashboard, no FastAPI, no Docker/TimescaleDB.
+- **[Dalinar] Implementation plan updated**: Rewrote `Plans/implementation-plan.html` with new 4-phase breakdown (Foundation → Intelligence → Hermes → Advanced Signals). Removed 6-phase dashboard plan entirely.
+- **[Dalinar] Decision recorded**: `.squad/decisions/inbox/dalinar-architecture-pivot.md` documents all pivot decisions for the Scribe to merge.
 
 ### Changed
 - Updated `start.ps1` so `Ensure-Uv` uses Astral's official PowerShell installer instead of `pip install --user uv`, while keeping the `.local\bin` PATH fixup

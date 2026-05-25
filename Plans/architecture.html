@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>financePortal — Architecture Document</title>
+  <title>financePortal — Intelligence Pipeline Architecture</title>
   <style>
     :root {
       --bg: #1a1a2e;
@@ -93,400 +93,333 @@
 </head>
 <body>
 
-<h1>⚡ financePortal — Architecture Document</h1>
+<h1>⚡ financePortal — Intelligence Pipeline Architecture</h1>
 <p class="meta">
-  Version: 1.0 &nbsp;|&nbsp; Author: Jarvis + Giakas &nbsp;|&nbsp; Created: 2026-05-24 &nbsp;|&nbsp; Status: Approved
+  Version: 2.0 &nbsp;|&nbsp; Author: Dalinar + Giakas &nbsp;|&nbsp; Revised: 2026-05-24 &nbsp;|&nbsp; Status: Active
 </p>
 
 <!-- ─────────────────────────────────────────── -->
-<h2>1. Project Overview</h2>
+<h2>1. What financePortal Is Now</h2>
 
 <p>
-  A <strong>personal financial intelligence platform</strong> that continuously gathers market data, news, 
-  sentiment, and regulatory filings from free sources across the internet. It stores everything locally in 
-  PostgreSQL, serves a fast dark-mode dashboard via React, and sends Telegram notifications for critical events.
+  financePortal is a <strong>financial intelligence pipeline</strong> — a personal background service that 
+  continuously gathers raw market data and news, pre-filters it for relevance, runs structured AI analysis 
+  on what matters, and stores pre-digested summaries that Hermes can read in seconds.
 </p>
 
 <p>
-  This is <em>not</em> a product or startup — it's a highly customized personal system for better market 
-  awareness, faster reaction to developments, and improved investment decision-making.
+  This is <em>not</em> a dashboard. Fidelity Tracker+ handles portfolio visualization. financePortal's only 
+  job is to make Hermes smarter about the user's portfolio — generating signals, distilling context, and 
+  delivering timely briefs.
 </p>
 
 <div class="callout callout-info">
-  <strong>Key Principle:</strong> AI handles analysis and summarization only. Data collection is done through 
-  APIs, scrapers, and scheduled jobs — no AI in the critical data path.
+  <strong>Core Principle:</strong> Every stage is designed to reduce token cost. Raw data is filtered locally 
+  (free), relevant items go through FinBERT (free), only signal-worthy content hits DeepSeek (~$0.01/day). 
+  Hermes reads ~2,500 tokens per session from pre-built snapshots.
+</div>
+
+<div class="callout">
+  <strong>Daily Cost Target: ~$0.05</strong> &nbsp;|&nbsp;
+  DeepSeek via OpenRouter: $0.27/1M input tokens &nbsp;|&nbsp;
+  Expected daily input: ~150K tokens → ~$0.04
 </div>
 
 <!-- ─────────────────────────────────────────── -->
-<h2>2. System Architecture</h2>
+<h2>2. Pipeline Architecture</h2>
 
 <div class="diagram">
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         DATA SOURCES (Free)                              │
-│  Yahoo Finance │ Finnhub │ SEC EDGAR │ RSS │ Reddit/X │ Capitol Trades  │
-└───────┬─────────────┬──────────┬────────┬────────┬──────────┬───────────┘
-        │             │          │        │        │          │
-        ▼             ▼          ▼        ▼        ▼          ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                     COLLECTOR PROCESS (Python + APScheduler)             │
-│                                                                         │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐ │
-│  │ Price    │ │ News     │ │ Filings  │ │ Sentiment│ │ Insider/     │ │
-│  │ Collector│ │ Collector│ │ Collector│ │ Collector│ │ Politician   │ │
-│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └──────┬───────┘ │
-└───────┼─────────────┼──────────┼────────┼──────────────────┼───────────┘
-        │             │          │        │                  │
-        ▼             ▼          ▼        ▼                  ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│              POSTGRESQL + TimescaleDB (Local Storage)                    │
-│                                                                         │
-│  prices (hypertable) │ news │ filings │ sentiment │ alerts │ watchlists │
-└───────────────────────────────┬─────────────────────────────────────────┘
-                                │
-              ┌─────────────────┼─────────────────┐
-              ▼                 ▼                  ▼
-┌──────────────────┐ ┌──────────────────┐ ┌──────────────────────┐
-│   FastAPI Server │ │  Event Detection │ │  AI Analysis Layer   │
-│   (REST API)     │ │  Engine          │ │  (DeepSeek/OpenRouter)│
-│                  │ │                  │ │                      │
-│  Serves dashboard│ │  Price drops     │ │  Daily summaries     │
-│  data via JSON   │ │  Volume spikes   │ │  Alert tuning        │
-│                  │ │  News triggers   │ │  Pattern detection   │
-└────────┬─────────┘ └────────┬─────────┘ └──────────────────────┘
-         │                    │
-         ▼                    ▼
-┌──────────────────┐ ┌──────────────────┐
-│  React Dashboard │ │  Telegram Bot    │
-│  (Vite + TV Charts)│ │  (One-way push)  │
-│                  │ │                  │
-│  Dark mode       │ │  3-tier alerts:  │
-│  Multi-panel     │ │  🔴 Critical     │
-│  Command center  │ │  🟡 Important    │
-└──────────────────┘ │  🟢 Info         │
-                     └──────────────────┘
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    financePortal — Intelligence Pipeline                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-         ┌─────────────────────────────┐
-         │   MCP Server (Phase 6)      │
-         │   SSE/HTTP + Bearer Token   │
-         │   Read + Write access       │
-         │                             │
-         │   → Hermes Agent queries    │
-         │   → External AI integration │
-         └─────────────────────────────┘
+┌─────────────────────────────────────┐
+│  STAGE 1 — GATHER  (free sources)   │
+│                                     │
+│  yfinance      → prices, fundamentals
+│  Finnhub API   → news, earnings     │
+│  SEC EDGAR     → filings, Form 4    │
+└─────────────────┬───────────────────┘
+                  │ raw articles + prices
+                  ▼
+┌─────────────────────────────────────┐
+│  STAGE 2 — FILTER  (zero LLM cost)  │
+│                                     │
+│  ① Ticker regex  → is this relevant?│
+│  ② Dedup hash    → seen before?     │
+│  ③ FinBERT       → sentiment score  │
+│     (local model, runs on CPU)      │
+└─────────────────┬───────────────────┘
+                  │ ~10-20% of raw volume
+                  │ tagged + scored
+                  ▼
+┌─────────────────────────────────────┐
+│  STAGE 3 — ANALYZE  (DeepSeek)      │
+│                                     │
+│  Batched every 6h during market hrs │
+│  Structured extraction per article: │
+│  • impact: bullish/bearish/neutral  │
+│  • affected tickers                 │
+│  • key facts (3 bullets max)        │
+│  • urgency: high/medium/low         │
+│                                     │
+│  Cost: ~$0.27/1M tokens → ~$0.01/day│
+└─────────────────┬───────────────────┘
+                  │ structured signals JSON
+                  ▼
+┌─────────────────────────────────────┐
+│  SIGNAL STORE  (SQLite / Postgres)  │
+│                                     │
+│  tickers  │ articles  │ signals     │
+│  briefs   │ theses    │ positions   │
+└──────┬──────────┬──────────────────┘
+       │          │
+       ▼          ▼
+┌────────────┐  ┌──────────────────────────┐
+│  CONTEXT   │  │  TELEGRAM DELIVERY       │
+│  BUILDER   │  │                          │
+│            │  │  🌅 Morning brief (7am)  │
+│  Assembles │  │  🌆 Evening brief (6pm)  │
+│  ~2,500    │  │  🔴 Critical alerts      │
+│  token     │  │     (immediate push)     │
+│  snapshot  │  └──────────────────────────┘
+└────┬───────┘
+     │
+     ▼
+┌─────────────────────────────────────┐
+│  MCP SERVER  (Hermes interface)     │
+│                                     │
+│  tools:                             │
+│  • get_portfolio_snapshot()         │
+│  • get_signals(ticker, days)        │
+│  • get_thesis(ticker)               │
+│  • get_morning_brief()              │
+│  • search_news(query)               │
+│                                     │
+│  ← ONLY interface Hermes uses →     │
+└─────────────────────────────────────┘
 </div>
 
 <!-- ─────────────────────────────────────────── -->
-<h2>3. Tech Stack</h2>
+<h2>3. Components</h2>
 
+<h3>3.1 Data Collectors</h3>
 <table>
-  <tr><th>Layer</th><th>Technology</th><th>Notes</th></tr>
-  <tr><td>Database</td><td>PostgreSQL 16 + TimescaleDB</td><td>Docker Compose, local volume</td></tr>
-  <tr><td>Backend API</td><td>Python 3.12 + FastAPI</td><td>Async, auto OpenAPI docs</td></tr>
-  <tr><td>Data Collection</td><td>Python + APScheduler</td><td>Separate process from API</td></tr>
-  <tr><td>Frontend</td><td>Vite + React 18 + TypeScript</td><td>SPA, dark mode</td></tr>
-  <tr><td>Charts</td><td>TradingView Lightweight Charts</td><td>Candlesticks, volume, indicators</td></tr>
-  <tr><td>Notifications</td><td>python-telegram-bot</td><td>One-way push</td></tr>
-  <tr><td>AI</td><td>DeepSeek Flash via OpenRouter</td><td>Analysis, summaries, alert tuning</td></tr>
-  <tr><td>MCP Server</td><td>Python, SSE/HTTP transport</td><td>Bearer token auth, Phase 6</td></tr>
-  <tr><td>Package Mgmt</td><td>uv (Python), pnpm (JS/TS)</td><td>Fast, lockfile support</td></tr>
-  <tr><td>Infrastructure</td><td>Docker Compose (Postgres only)</td><td>App runs natively</td></tr>
+  <tr><th>Collector</th><th>Source</th><th>Data</th><th>Schedule</th><th>Cost</th></tr>
+  <tr><td>Price Collector</td><td>yfinance</td><td>OHLCV, fundamentals, history</td><td>Every 5 min (market hours)</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>News Collector</td><td>Finnhub API</td><td>News articles, earnings</td><td>Every 5 min</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>Filings Collector</td><td>SEC EDGAR</td><td>10-Q, 10-K, Form 4 insider trades</td><td>Every 30 min</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>Reddit Collector (Phase 4)</td><td>Reddit API</td><td>wsb mentions, sentiment</td><td>Every 15 min</td><td><span class="badge badge-free">FREE</span></td></tr>
+  <tr><td>Insider Collector (Phase 4)</td><td>Capitol Trades / Quiver Quant</td><td>Politician + insider trades</td><td>Every 6 hrs</td><td><span class="badge badge-free">FREE</span></td></tr>
 </table>
 
-<!-- ─────────────────────────────────────────── -->
-<h2>4. Data Sources</h2>
-
-<table>
-  <tr><th>Source</th><th>Data Type</th><th>Method</th><th>Frequency</th><th>Cost</th></tr>
-  <tr><td>Yahoo Finance (yfinance)</td><td>Prices, fundamentals, historical</td><td>Python library</td><td>Every 1-5 min (market hours)</td><td><span class="badge badge-free">FREE</span></td></tr>
-  <tr><td>Finnhub</td><td>News, earnings, company events</td><td>REST API</td><td>Every 2-5 min</td><td><span class="badge badge-free">FREE</span></td></tr>
-  <tr><td>SEC EDGAR</td><td>Filings, insider trades (Form 4)</td><td>REST API + RSS</td><td>Every 30 min</td><td><span class="badge badge-free">FREE</span></td></tr>
-  <tr><td>RSS Feeds</td><td>Financial news (Reuters, MW, SA)</td><td>feedparser</td><td>Every 5 min</td><td><span class="badge badge-free">FREE</span></td></tr>
-  <tr><td>Capitol Trades / Quiver Quant</td><td>Politician stock trades</td><td>Scraping / API</td><td>Every 6 hours</td><td><span class="badge badge-free">FREE</span></td></tr>
-  <tr><td>Reddit (r/wallstreetbets, etc.)</td><td>Sentiment, mentions</td><td>Reddit API (free tier)</td><td>Every 15 min</td><td><span class="badge badge-free">FREE</span></td></tr>
-  <tr><td>X/Twitter</td><td>Sentiment, breaking news</td><td>Scraping / Nitter</td><td>Every 15 min</td><td><span class="badge badge-free">FREE</span></td></tr>
-</table>
-
-<!-- ─────────────────────────────────────────── -->
-<h2>5. Database Schema (High-Level)</h2>
-
-<h3>5.1 Core Tables</h3>
-<pre><code>-- Instruments being tracked
-CREATE TABLE instruments (
-    id          SERIAL PRIMARY KEY,
-    symbol      VARCHAR(10) UNIQUE NOT NULL,
-    name        VARCHAR(255),
-    type        VARCHAR(10) DEFAULT 'stock',  -- stock, etf
-    sector      VARCHAR(100),
-    is_owned    BOOLEAN DEFAULT FALSE,
-    created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Watchlists
-CREATE TABLE watchlists (
-    id          SERIAL PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL,
-    created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE watchlist_items (
-    watchlist_id  INT REFERENCES watchlists(id),
-    instrument_id INT REFERENCES instruments(id),
-    added_at      TIMESTAMPTZ DEFAULT NOW(),
-    PRIMARY KEY (watchlist_id, instrument_id)
-);</code></pre>
-
-<h3>5.2 Time-Series (TimescaleDB Hypertables)</h3>
-<pre><code>-- Intraday prices (retain 14 days)
-CREATE TABLE prices_intraday (
-    time        TIMESTAMPTZ NOT NULL,
-    symbol      VARCHAR(10) NOT NULL,
-    open        NUMERIC(12,4),
-    high        NUMERIC(12,4),
-    low         NUMERIC(12,4),
-    close       NUMERIC(12,4),
-    volume      BIGINT
-);
-SELECT create_hypertable('prices_intraday', 'time');
-
--- Daily candles (retain 1 year)
-CREATE TABLE prices_daily (
-    time        TIMESTAMPTZ NOT NULL,
-    symbol      VARCHAR(10) NOT NULL,
-    open        NUMERIC(12,4),
-    high        NUMERIC(12,4),
-    low         NUMERIC(12,4),
-    close       NUMERIC(12,4),
-    volume      BIGINT
-);
-SELECT create_hypertable('prices_daily', 'time');</code></pre>
-
-<h3>5.3 Events & News (JSONB for flexibility)</h3>
-<pre><code>-- News articles (retain 15 days)
-CREATE TABLE news (
-    id          SERIAL PRIMARY KEY,
-    symbol      VARCHAR(10),
-    source      VARCHAR(50),
-    title       TEXT NOT NULL,
-    summary     TEXT,
-    url         TEXT,
-    metadata    JSONB,
-    published_at TIMESTAMPTZ,
-    fetched_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
--- SEC filings
-CREATE TABLE filings (
-    id          SERIAL PRIMARY KEY,
-    symbol      VARCHAR(10),
-    form_type   VARCHAR(20),
-    filer_name  VARCHAR(255),
-    data        JSONB,
-    filed_at    TIMESTAMPTZ,
-    fetched_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Sentiment scores
-CREATE TABLE sentiment (
-    id          SERIAL PRIMARY KEY,
-    symbol      VARCHAR(10),
-    source      VARCHAR(50),
-    score       NUMERIC(5,3),
-    mentions    INT,
-    data        JSONB,
-    measured_at TIMESTAMPTZ DEFAULT NOW()
-);</code></pre>
-
-<h3>5.4 Alerts</h3>
-<pre><code>CREATE TABLE alerts (
-    id          SERIAL PRIMARY KEY,
-    symbol      VARCHAR(10),
-    type        VARCHAR(50),       -- price_drop, volume_spike, news_trigger, etc.
-    tier        VARCHAR(10),       -- critical, important, info
-    title       TEXT NOT NULL,
-    body        TEXT,
-    data        JSONB,
-    is_read     BOOLEAN DEFAULT FALSE,
-    notified_at TIMESTAMPTZ,
-    created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE alert_rules (
-    id          SERIAL PRIMARY KEY,
-    symbol      VARCHAR(10),       -- NULL = applies to all
-    type        VARCHAR(50) NOT NULL,
-    tier        VARCHAR(10) NOT NULL,
-    config      JSONB NOT NULL,    -- thresholds, conditions
-    enabled     BOOLEAN DEFAULT TRUE,
-    created_at  TIMESTAMPTZ DEFAULT NOW()
-);</code></pre>
-
-<h3>5.5 Retention Policies</h3>
-<pre><code>-- TimescaleDB automatic data retention
-SELECT add_retention_policy('prices_intraday', INTERVAL '14 days');
-SELECT add_retention_policy('prices_daily', INTERVAL '1 year');
-
--- Manual cleanup job for non-hypertables (run daily)
--- DELETE FROM news WHERE fetched_at < NOW() - INTERVAL '15 days';
--- DELETE FROM sentiment WHERE measured_at < NOW() - INTERVAL '15 days';</code></pre>
-
-<!-- ─────────────────────────────────────────── -->
-<h2>6. Repository Structure</h2>
-
-<pre><code>financePortal/
-├── Plans/                    # Architecture docs & plans (HTML)
-├── docker-compose.yml        # PostgreSQL + TimescaleDB
-├── .env.example              # Environment variable template
-├── start.ps1                 # One-command startup script
-│
-├── backend/                  # Python backend (monorepo package)
-│   ├── pyproject.toml        # uv/pip config
-│   ├── src/
-│   │   ├── api/              # FastAPI application
-│   │   │   ├── main.py       # App entry point
-│   │   │   ├── routers/      # Route modules (prices, news, watchlists, alerts)
-│   │   │   └── models/       # Pydantic response models
-│   │   │
-│   │   ├── collectors/       # Data collection jobs
-│   │   │   ├── scheduler.py  # APScheduler config
-│   │   │   ├── prices.py     # Yahoo Finance price collector
-│   │   │   ├── news.py       # Finnhub + RSS news collector
-│   │   │   ├── filings.py    # SEC EDGAR collector
-│   │   │   ├── sentiment.py  # Reddit/X sentiment collector
-│   │   │   └── insider.py    # Insider + politician trade collector
-│   │   │
-│   │   ├── detection/        # Event detection engine
-│   │   │   ├── engine.py     # Main detection loop
-│   │   │   └── rules.py      # Rule evaluation logic
-│   │   │
-│   │   ├── notifications/    # Telegram + alert dispatch
-│   │   │   ├── telegram.py
-│   │   │   └── dispatcher.py
-│   │   │
-│   │   ├── ai/               # AI analysis layer (Phase 5)
-│   │   │   ├── client.py     # OpenRouter/DeepSeek client
-│   │   │   ├── analysis.py   # Daily analysis jobs
-│   │   │   └── prompts.py    # Prompt templates
-│   │   │
-│   │   ├── mcp/              # MCP server (Phase 6)
-│   │   │   ├── server.py
-│   │   │   └── tools.py      # MCP tool definitions
-│   │   │
-│   │   └── db/               # Database utilities
-│   │       ├── connection.py
-│   │       ├── migrations/   # SQL migration files
-│   │       └── queries.py    # Common query helpers
-│   │
-│   └── tests/
-│
-├── frontend/                 # React dashboard
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── index.html
-│   └── src/
-│       ├── App.tsx
-│       ├── components/
-│       │   ├── layout/       # Shell, panels, navigation
-│       │   ├── charts/       # TradingView chart wrappers
-│       │   ├── watchlist/    # Watchlist components
-│       │   ├── news/         # News feed components
-│       │   └── alerts/       # Alert display components
-│       ├── hooks/            # Custom React hooks
-│       ├── services/         # API client layer
-│       └── types/            # TypeScript type definitions
-│
-├── .squad/                   # Squad team config (existing)
-├── .github/                  # GitHub workflows (existing)
-└── CHANGELOG.md</code></pre>
-
-<!-- ─────────────────────────────────────────── -->
-<h2>7. Update Frequencies</h2>
-
-<table>
-  <tr><th>Collector</th><th>Market Hours</th><th>Off Hours</th><th>Notes</th></tr>
-  <tr><td>Prices (intraday)</td><td>Every 2 min</td><td>Off</td><td>Yahoo Finance, batch 50-100 symbols</td></tr>
-  <tr><td>Prices (daily candle)</td><td>Once at close</td><td>—</td><td>End-of-day summary</td></tr>
-  <tr><td>News (Finnhub + RSS)</td><td>Every 3 min</td><td>Every 15 min</td><td>Rate-limit aware</td></tr>
-  <tr><td>SEC EDGAR filings</td><td>Every 30 min</td><td>Every 2 hrs</td><td>Low volume source</td></tr>
-  <tr><td>Sentiment (Reddit/X)</td><td>Every 15 min</td><td>Every 30 min</td><td>Aggregate scores</td></tr>
-  <tr><td>Insider/Politician trades</td><td>Every 6 hrs</td><td>Every 6 hrs</td><td>Infrequent updates</td></tr>
-  <tr><td>Event detection</td><td>Every 1 min</td><td>Every 5 min</td><td>Checks DB for trigger conditions</td></tr>
-  <tr><td>AI analysis</td><td>2x daily</td><td>—</td><td>Morning + evening via DeepSeek</td></tr>
-</table>
-
-<!-- ─────────────────────────────────────────── -->
-<h2>8. Alert Tiers</h2>
-
-<table>
-  <tr><th>Tier</th><th>Channel</th><th>Latency</th><th>Examples</th></tr>
-  <tr>
-    <td>🔴 Critical</td>
-    <td>Telegram immediately</td>
-    <td>&lt; 2 min</td>
-    <td>Stop-loss approached, 5%+ drop on owned stock, breaking M&amp;A, large insider sell on your position</td>
-  </tr>
-  <tr>
-    <td>🟡 Important</td>
-    <td>Telegram batched (every 30 min)</td>
-    <td>&lt; 30 min</td>
-    <td>Analyst upgrade/downgrade, politician trade on watchlist, unusual volume (3x+), sentiment spike</td>
-  </tr>
-  <tr>
-    <td>🟢 Informational</td>
-    <td>Dashboard only</td>
-    <td>Next page load</td>
-    <td>General news, minor moves, daily summaries, new SEC filings</td>
-  </tr>
-</table>
-
-<!-- ─────────────────────────────────────────── -->
-<h2>9. Dashboard Layout</h2>
-
-<div class="diagram">
-┌─────────────────────────────────────────────────────────────────────┐
-│  🔍 Search    │  S&P: +0.4%  │  NASDAQ: -0.2%  │  Portfolio: +$1,234  │
-├───────────────┼─────────────────────────────────┼───────────────────┤
-│               │                                 │                   │
-│  PORTFOLIO    │         MAIN CHART              │   EVENT FEED      │
-│  ───────────  │      (TradingView)              │   ───────────     │
-│  AAPL  +1.2%  │                                 │   🔴 TSLA -6.2%  │
-│  MSFT  -0.3%  │   ┌─────────────────────┐      │   🟡 AAPL upgrade│
-│  GOOGL +0.8%  │   │                     │      │   🟢 Fed minutes  │
-│               │   │   Candlestick +     │      │   🟡 Unusual vol  │
-│  WATCHLIST    │   │   Volume chart       │      │   🟢 MSFT earnings│
-│  ───────────  │   │                     │      │                   │
-│  NVDA  +2.1%  │   └─────────────────────┘      │   ─── 30m ago ─── │
-│  AMD   -1.4%  │                                 │   🟢 Reddit spike │
-│  TSLA  -6.2%  │   [1D] [1W] [1M] [3M] [1Y]    │   🟢 SEC filing   │
-│               │                                 │                   │
-└───────────────┴─────────────────────────────────┴───────────────────┘
-</div>
-
-<!-- ─────────────────────────────────────────── -->
-<h2>10. Portability & Deployment</h2>
-
+<h3>3.2 Pre-Filter Layer</h3>
+<p>Runs locally on every ingested item before anything touches an LLM:</p>
 <ul>
-  <li><strong>Development:</strong> Current laptop. All code in this repo.</li>
-  <li><strong>Production:</strong> Desktop PC. Clone repo, run <code>docker compose up -d</code> for Postgres, run <code>start.ps1</code> for the app.</li>
-  <li><strong>.env file:</strong> All secrets (Telegram token, API keys, OpenRouter key) in <code>.env</code> — never committed.</li>
-  <li><strong>.env.example:</strong> Committed template showing required variables.</li>
-  <li><strong>No backup needed:</strong> Data is re-fetchable. Postgres is ephemeral cache + recent history.</li>
-  <li><strong>MCP/Hermes:</strong> Phase 6, built on desktop machine where Hermes is installed.</li>
+  <li><strong>Ticker regex</strong> — drop articles with no mentions of tracked symbols</li>
+  <li><strong>Dedup hash</strong> — SHA-256 of title+source, skip if already processed</li>
+  <li><strong>FinBERT</strong> — local transformer model, scores sentiment (positive/negative/neutral). Items below threshold skipped. <em>Zero API cost.</em></li>
+  <li><strong>Age gate</strong> — drop articles older than 48 hours at time of ingestion</li>
+</ul>
+
+<div class="callout callout-info">
+  FinBERT runs locally on CPU via Hugging Face <code>transformers</code>. ~0.2s per article. 
+  Pre-filters ~80-90% of raw volume — only high-relevance items reach DeepSeek.
+</div>
+
+<h3>3.3 Analysis Engine</h3>
+<p>DeepSeek R1 (distill) via OpenRouter. Runs in batches, never per-article in real-time.</p>
+<pre><code>-- Prompt template (structured extraction)
+Given this financial news article, extract:
+{
+  "impact": "bullish|bearish|neutral",
+  "affected_tickers": ["AAPL", "MSFT"],
+  "key_facts": ["fact 1", "fact 2", "fact 3"],
+  "urgency": "high|medium|low",
+  "rationale": "one sentence why"
+}
+
+Article: {text}</code></pre>
+<p>Batch window: every 6 hours during market hours. Each batch: ~50–200 articles. Estimated 500 tokens/article average → ~$0.01–$0.03 per batch.</p>
+
+<h3>3.4 Signal Store Schema</h3>
+<pre><code>-- Core tables
+tickers         (symbol, name, sector, is_held, is_watchlist)
+articles        (id, ticker_symbols[], title, source, url, published_at,
+                 finbert_score, finbert_label, dedup_hash)
+signals         (id, article_id, ticker, impact, urgency, key_facts JSONB,
+                 rationale, created_at)
+briefs          (id, type [morning|evening|adhoc], content TEXT,
+                 token_count, created_at, delivered_at)
+theses          (id, ticker, thesis TEXT, updated_at, signal_ids JSONB)
+positions       (id, ticker, shares, avg_cost, notes, updated_at)</code></pre>
+
+<h3>3.5 Context Builder</h3>
+<p>Assembles a compact snapshot for Hermes on demand. Target: &lt;2,500 tokens total.</p>
+<ul>
+  <li>Latest brief (morning or evening) → ~800 tokens</li>
+  <li>High-urgency signals from past 24h → ~600 tokens</li>
+  <li>Per-ticker thesis for held positions → ~600 tokens</li>
+  <li>Price deltas for watchlist (compact table) → ~300 tokens</li>
+  <li>Buffer for Hermes tool calls → ~200 tokens</li>
+</ul>
+
+<h3>3.6 MCP Server</h3>
+<p>The only interface Hermes uses. Read-only tools returning pre-digested content:</p>
+<table>
+  <tr><th>Tool</th><th>Returns</th><th>Typical Tokens</th></tr>
+  <tr><td><code>get_portfolio_snapshot()</code></td><td>Positions + price deltas + P&L summary</td><td>~400</td></tr>
+  <tr><td><code>get_morning_brief()</code></td><td>Latest morning brief text</td><td>~800</td></tr>
+  <tr><td><code>get_signals(ticker, days=1)</code></td><td>Signals for a ticker in time window</td><td>~300</td></tr>
+  <tr><td><code>get_thesis(ticker)</code></td><td>Accumulated thesis for a ticker</td><td>~200</td></tr>
+  <tr><td><code>search_news(query)</code></td><td>Top 5 relevant articles (titles + summaries)</td><td>~500</td></tr>
+</table>
+
+<h3>3.7 Telegram Delivery</h3>
+<ul>
+  <li><strong>Morning brief</strong> (7:00 AM) — overnight signals + pre-market movers + key things to watch</li>
+  <li><strong>Evening brief</strong> (6:00 PM) — day's signals, portfolio performance, tomorrow's catalysts</li>
+  <li><strong>Critical alerts</strong> (immediate) — high-urgency signals on held positions only</li>
 </ul>
 
 <!-- ─────────────────────────────────────────── -->
-<h2>11. Key Design Decisions</h2>
+<h2>4. Data Flow with Cost Annotations</h2>
+
+<div class="diagram">
+Stage          Volume          Cost          Notes
+─────────────────────────────────────────────────────────────────
+GATHER         ~500 items/day  $0.00         Free APIs
+FILTER         ~50 pass        $0.00         FinBERT local
+ANALYZE        ~50 articles    ~$0.01        DeepSeek batched
+BRIEF BUILD    2 briefs/day    ~$0.01        GPT-style summarize
+CONTEXT BUILD  on-demand       ~$0.00        Reads from DB
+MCP CALLS      ~5/session      ~$0.00        Pre-digested text
+TELEGRAM       2 msgs/day      $0.00         Free bot API
+─────────────────────────────────────────────────────────────────
+TOTAL                          ~$0.02-0.05/day   Well under target
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>5. Technology Choices</h2>
+
+<table>
+  <tr><th>Component</th><th>Technology</th><th>Rationale</th></tr>
+  <tr><td>Data collection</td><td>Python + yfinance + Finnhub</td><td>Mature libraries, free tier sufficient, no auth complexity</td></tr>
+  <tr><td>Scheduler</td><td>APScheduler</td><td>In-process, no infra, cron-style — no Redis/Celery needed</td></tr>
+  <tr><td>Pre-filter</td><td>FinBERT (HuggingFace)</td><td>Finance-domain BERT, runs CPU, zero cost, 93%+ accuracy on financial text</td></tr>
+  <tr><td>Analysis LLM</td><td>DeepSeek R1 via OpenRouter</td><td>$0.27/1M tokens (cheapest quality option), structured JSON output, no subscription</td></tr>
+  <tr><td>Storage</td><td>SQLite (dev) / PostgreSQL (prod)</td><td>SQLite is zero-infra for dev; Postgres for production if needed — same schema</td></tr>
+  <tr><td>MCP framework</td><td>Python MCP SDK (stdio transport)</td><td>Official SDK, stdio = no port management, Hermes native integration</td></tr>
+  <tr><td>Delivery</td><td>python-telegram-bot</td><td>Proven, free, one-way push — no webhook complexity needed</td></tr>
+  <tr><td>Package mgmt</td><td>uv</td><td>Fast, reproducible, lockfile support, already decided by team</td></tr>
+</table>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>6. Phase Breakdown</h2>
+
+<table>
+  <tr><th>Phase</th><th>Name</th><th>Outcome</th><th>Duration</th></tr>
+  <tr>
+    <td><span class="badge badge-phase">Phase 1</span></td>
+    <td>Foundation</td>
+    <td>Collectors running, schema created, data flowing into SQLite/Postgres on schedule</td>
+    <td>~1 week</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-phase">Phase 2</span></td>
+    <td>Intelligence</td>
+    <td>FinBERT filtering, DeepSeek analysis, signals stored, briefs generated</td>
+    <td>~1 week</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-phase">Phase 3</span></td>
+    <td>Hermes</td>
+    <td>MCP server live, Hermes can query snapshots, Telegram briefs delivered</td>
+    <td>~1 week</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-phase">Phase 4</span></td>
+    <td>Advanced Signals</td>
+    <td>Reddit sentiment, insider trades, politician disclosures, pattern detection</td>
+    <td>~2 weeks</td>
+  </tr>
+</table>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>7. What We Are NOT Building</h2>
 
 <div class="callout">
-  <strong>Decision Log</strong>
+  <strong>Explicit scope exclusions — do not build these:</strong>
+  <ul style="margin-top: 0.5rem;">
+    <li>❌ <strong>React dashboard</strong> — Fidelity Tracker+ handles portfolio visualization</li>
+    <li>❌ <strong>REST API for humans</strong> — no FastAPI server, no Swagger UI, no frontend</li>
+    <li>❌ <strong>Real-time price feeds</strong> — 5-min polling is sufficient for intelligence</li>
+    <li>❌ <strong>Custom charting</strong> — TradingView Lightweight Charts in a web app = waste of time</li>
+    <li>❌ <strong>Alert UI / dashboard panels</strong> — Telegram is the only notification surface</li>
+    <li>❌ <strong>Multi-user support</strong> — this is one person's personal tool</li>
+    <li>❌ <strong>TimescaleDB</strong> — overkill; plain SQLite/Postgres is sufficient for this data volume</li>
+    <li>❌ <strong>Docker Compose stack</strong> — SQLite for dev, bare Postgres install if needed; no Docker required</li>
+  </ul>
+</div>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>8. Repository Structure</h2>
+
+<pre><code>financePortal/
+├── Plans/                      # Architecture docs (HTML, dark theme)
+├── .env.example                # API keys template
+├── start.ps1                   # One-command startup
+│
+├── pipeline/                   # Main Python package (uv-managed)
+│   ├── pyproject.toml
+│   └── src/
+│       ├── collectors/         # yfinance, Finnhub, SEC EDGAR
+│       │   ├── prices.py
+│       │   ├── news.py
+│       │   └── filings.py
+│       │
+│       ├── filter/             # Pre-filter layer
+│       │   ├── dedup.py
+│       │   ├── ticker_regex.py
+│       │   └── finbert.py
+│       │
+│       ├── analysis/           # DeepSeek structured extraction
+│       │   ├── client.py       # OpenRouter wrapper
+│       │   ├── extractor.py    # Batch analysis jobs
+│       │   └── prompts.py
+│       │
+│       ├── store/              # Signal Store
+│       │   ├── schema.sql
+│       │   ├── db.py           # SQLite / asyncpg connection
+│       │   └── queries.py
+│       │
+│       ├── context/            # Context Builder
+│       │   └── builder.py
+│       │
+│       ├── mcp/                # MCP Server
+│       │   ├── server.py
+│       │   └── tools.py
+│       │
+│       ├── delivery/           # Telegram briefs
+│       │   └── telegram.py
+│       │
+│       └── scheduler.py        # APScheduler runner
+│
+├── .squad/                     # Squad AI team config
+└── CHANGELOG.md</code></pre>
+
+<!-- ─────────────────────────────────────────── -->
+<h2>9. Key Design Decisions</h2>
+
+<div class="callout callout-info">
   <ol>
-    <li><strong>Free data only</strong> — no paid APIs for data collection. AI usage (OpenRouter) is the only cost.</li>
-    <li><strong>Separate processes</strong> — API server never blocked by collectors. Dashboard always fast.</li>
-    <li><strong>TimescaleDB</strong> — automatic retention, compression, fast time-range queries.</li>
-    <li><strong>Hybrid schema</strong> — relational for structured data, JSONB for messy/variable sources.</li>
-    <li><strong>AI is advisory only</strong> — it summarizes and suggests, never collects or acts autonomously.</li>
-    <li><strong>MCP is Phase 6</strong> — build the platform first, agent integration second.</li>
-    <li><strong>One-way Telegram</strong> — bot pushes alerts, Hermes handles two-way conversation later.</li>
-    <li><strong>Monorepo</strong> — everything in one repo for simplicity and portability.</li>
+    <li><strong>FinBERT before DeepSeek</strong> — free local model eliminates 80-90% of content before it touches a paid API.</li>
+    <li><strong>Batched analysis, not real-time</strong> — 6-hour batch windows keep costs predictable; nothing needs instant LLM response.</li>
+    <li><strong>Pre-digested snapshots</strong> — Hermes reads summaries, not raw data. 2,500 tokens vs. 250,000 tokens of raw articles.</li>
+    <li><strong>MCP as sole interface</strong> — no HTTP API, no dashboard polling. One clean tool surface for Hermes.</li>
+    <li><strong>SQLite-first</strong> — zero infra for a personal tool. Upgrade to Postgres only if concurrent writes become a bottleneck.</li>
+    <li><strong>Telegram for push, MCP for pull</strong> — push briefs proactively; Hermes pulls context on demand.</li>
+    <li><strong>No frontend = no maintenance</strong> — the pipeline is invisible infrastructure. All interaction is through Hermes or Telegram.</li>
   </ol>
 </div>
 

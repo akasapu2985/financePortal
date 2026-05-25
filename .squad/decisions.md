@@ -2,6 +2,12 @@
 
 ## Active Decisions
 
+### 2026-05-24T20:37:13-07:00: Architecture Pivot — Intelligence Pipeline for Hermes
+**By:** Adolin (PM)
+**What:** Project pivoted from full financial dashboard to intelligence pipeline feeding Hermes agent. Eliminated: React frontend, custom dashboard UI, dashboard-specific API endpoints, alert/watchlist UI. Using Fidelity Tracker+ for UI. New phases: Phase 1 (data gathering + storage), Phase 2 (FinBERT + DeepSeek intelligence), Phase 3 (MCP server for Hermes + Telegram delivery), Phase 4 (advanced signals). MCP is the ONLY interface — no REST API.
+**Why:** User directive — architecture pivot requested. Full context in spawn prompt dated 2026-05-24.
+**GitHub impact:** Closed 12 issues (#32-35, #42-44, #54-56, #65-66). Created 25 new issues (#76-100). Updated 18 existing issues (#47-53, #58-61, #69-75) with pivot context comments. Phase label descriptions updated.
+
 ### 2026-05-24T09:58:04-07:00: CHANGELOG.md Maintenance
 **By:** Giakas (via Copilot)
 **What:** Every agent MUST update CHANGELOG.md when making changes. This is a global rule for all agents — always maintain a changelog so there's a track of what actually changed.

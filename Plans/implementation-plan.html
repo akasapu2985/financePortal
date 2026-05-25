@@ -96,239 +96,184 @@
 
 <h1>⚡ financePortal — Implementation Plan</h1>
 <p class="meta">
-  Version: 1.0 &nbsp;|&nbsp; Created: 2026-05-24 &nbsp;|&nbsp; Status: Ready to Execute
+  Version: 2.0 &nbsp;|&nbsp; Revised: 2026-05-24 &nbsp;|&nbsp; Status: Active (Pivot to Intelligence Pipeline)
 </p>
 
 <div class="callout">
-  <strong>Execution Strategy:</strong> Build in phases. Each phase produces a working, testable system. 
-  No phase depends on AI or external services that aren't built yet. The system works standalone from Phase 1 onward.
+  <strong>Architecture Pivot:</strong> This plan replaces the 6-phase dashboard build. 
+  financePortal is now an <strong>intelligence pipeline for Hermes</strong>, not a dashboard product. 
+  4 focused phases, ~$0.05/day operating cost, no frontend required.
 </div>
 
 <!-- ─────────────────────────────────────── -->
-<h2>Phase 1 — Foundation (Get Data Flowing)</h2>
+<h2>Phase 1 — Foundation</h2>
 
 <div class="phase-card phase-1">
-  <h3>🏗️ Infrastructure + Core Data Pipeline</h3>
-  <p>Goal: PostgreSQL running, schema created, price data flowing in, basic API serving it.</p>
+  <h3>🏗️ Collectors + Schema + Scheduler</h3>
+  <p>Goal: Data flowing continuously into SQLite. The pipeline runs unattended on a schedule.</p>
 
   <h3>Tasks</h3>
   <ul class="task-list">
-    <li>Create <code>docker-compose.yml</code> with PostgreSQL 16 + TimescaleDB image</li>
-    <li>Create <code>.env.example</code> with all required environment variables</li>
-    <li>Set up Python project with <code>uv</code> — <code>backend/pyproject.toml</code></li>
-    <li>Create database migration system (simple numbered SQL files)</li>
-    <li>Write initial migration: instruments, watchlists, prices_intraday, prices_daily tables</li>
-    <li>Write second migration: news, filings, sentiment, alerts, alert_rules tables</li>
-    <li>Build <code>db/connection.py</code> — async connection pool (asyncpg)</li>
-    <li>Build Yahoo Finance price collector (<code>collectors/prices.py</code>)</li>
-    <li>Build Finnhub news collector (<code>collectors/news.py</code>)</li>
-    <li>Build APScheduler runner (<code>collectors/scheduler.py</code>)</li>
-    <li>Build FastAPI app with health check endpoint</li>
-    <li>Build API routes: <code>GET /instruments</code>, <code>GET /prices/{symbol}</code>, <code>GET /news</code></li>
-    <li>Create <code>start.ps1</code> script to launch Postgres + API + Collector</li>
-    <li>Add seed data: initial watchlist with ~10-20 stocks for testing</li>
-    <li>Verify: prices flowing into DB, API responding with real data</li>
+    <li>Set up Python project with <code>uv</code> — <code>pipeline/pyproject.toml</code></li>
+    <li>Create <code>.env.example</code> with all required env vars (Finnhub key, OpenRouter key, Telegram token)</li>
+    <li>Write Signal Store schema (<code>store/schema.sql</code>): tickers, articles, signals, briefs, theses, positions</li>
+    <li>Build <code>store/db.py</code> — SQLite connection with WAL mode, auto-migrate on startup</li>
+    <li>Build Yahoo Finance price collector (<code>collectors/prices.py</code>) — OHLCV every 5 min market hours</li>
+    <li>Build Finnhub news collector (<code>collectors/news.py</code>) — articles every 5 min, rate-limit aware</li>
+    <li>Build SEC EDGAR collector (<code>collectors/filings.py</code>) — Form 4, 8-K, every 30 min</li>
+    <li>Build APScheduler runner (<code>scheduler.py</code>) — registers all jobs, handles startup/shutdown</li>
+    <li>Create <code>start.ps1</code> — one command launches the pipeline process</li>
+    <li>Add seed data: positions table with current portfolio symbols</li>
+    <li>Verify: articles and prices showing up in SQLite after 10 minutes of running</li>
   </ul>
 
   <h3>Deliverables</h3>
   <ul>
-    <li>Working Docker Compose stack</li>
-    <li>Python backend collecting prices + news on schedule</li>
-    <li>FastAPI serving data at <code>localhost:8000</code></li>
-    <li>Swagger docs at <code>localhost:8000/docs</code></li>
+    <li>Pipeline process running on schedule, persisting data to SQLite</li>
+    <li>Prices, news, and filings collected continuously</li>
+    <li>Single <code>uv run start</code> or <code>start.ps1</code> launches everything</li>
   </ul>
 
   <p class="dep">Dependencies: None. This is the foundation.</p>
 </div>
 
 <!-- ─────────────────────────────────────── -->
-<h2>Phase 2 — Dashboard MVP</h2>
+<h2>Phase 2 — Intelligence</h2>
 
 <div class="phase-card phase-2">
-  <h3>⚛️ React Dashboard with Live Data</h3>
-  <p>Goal: Open browser, see your stocks, charts, and news feed. Feels fast.</p>
+  <h3>🧠 Filter + Analyze + Digest</h3>
+  <p>Goal: Raw articles get filtered by FinBERT, relevant ones analyzed by DeepSeek, signals and briefs stored.</p>
 
   <h3>Tasks</h3>
   <ul class="task-list">
-    <li>Scaffold Vite + React + TypeScript project in <code>frontend/</code></li>
-    <li>Install dependencies: TradingView Lightweight Charts, React Query (TanStack), Tailwind CSS</li>
-    <li>Build dark theme + CSS variables system</li>
-    <li>Build shell layout: top bar, left panel, center panel, right panel</li>
-    <li>Build portfolio/watchlist component (left panel) — compact table with day change, sparklines</li>
-    <li>Build TradingView chart wrapper component (center panel) — candlestick + volume</li>
-    <li>Build news/event feed component (right panel) — scrollable, categorized</li>
-    <li>Build top bar: search, market indices, portfolio total value</li>
-    <li>Build API service layer (<code>services/api.ts</code>) — typed fetch wrappers</li>
-    <li>Add React Query for data fetching with polling (refetch every 30s)</li>
-    <li>Build watchlist CRUD: add/remove stocks, create new watchlists</li>
-    <li>Add time range selector for charts (1D, 1W, 1M, 3M, 1Y)</li>
-    <li>Responsive behavior: panels collapse on smaller screens</li>
-    <li>Verify: dashboard loads in &lt;1s, charts render smoothly, data updates live</li>
+    <li>Build dedup layer (<code>filter/dedup.py</code>) — SHA-256 hash of title+source, skip known articles</li>
+    <li>Build ticker regex filter (<code>filter/ticker_regex.py</code>) — drop articles with no tracked symbol mentions</li>
+    <li>Install + configure FinBERT (<code>filter/finbert.py</code>) — <code>ProsusAI/finbert</code> from HuggingFace, CPU inference</li>
+    <li>Build filter pipeline that chains: dedup → ticker match → FinBERT score → mark as filtered</li>
+    <li>Build OpenRouter client (<code>analysis/client.py</code>) — DeepSeek R1 distill, retries, cost logging</li>
+    <li>Write extraction prompt (<code>analysis/prompts.py</code>) — structured JSON: impact, tickers, key_facts, urgency</li>
+    <li>Build batch extractor (<code>analysis/extractor.py</code>) — collects pending filtered articles, batches to DeepSeek every 6h</li>
+    <li>Store extracted signals in <code>signals</code> table</li>
+    <li>Build brief generator (<code>analysis/brief_builder.py</code>) — calls DeepSeek to synthesize morning/evening brief from today's signals</li>
+    <li>Store briefs in <code>briefs</code> table with token count + cost logged</li>
+    <li>Verify: after market hours, morning brief is generated and stored in DB</li>
   </ul>
 
   <h3>Deliverables</h3>
   <ul>
-    <li>Full command-center dashboard at <code>localhost:3000</code></li>
-    <li>Interactive charts with real market data</li>
-    <li>Watchlist management</li>
-    <li>Auto-refreshing data</li>
+    <li>FinBERT running locally, filtering ~80-90% of raw articles</li>
+    <li>DeepSeek analyzing remaining articles in 6h batches (~$0.01/day)</li>
+    <li>Morning + evening briefs auto-generated and stored</li>
+    <li>Cost log showing actual spend per day</li>
   </ul>
 
-  <p class="dep">Dependencies: Phase 1 (API must be serving data)</p>
+  <p class="dep">Dependencies: Phase 1 (articles must be flowing into DB)</p>
 </div>
 
 <!-- ─────────────────────────────────────── -->
-<h2>Phase 3 — Alerts & Notifications</h2>
+<h2>Phase 3 — Hermes</h2>
 
 <div class="phase-card phase-3">
-  <h3>🔔 Event Detection + Telegram Alerts</h3>
-  <p>Goal: System detects important events and pushes notifications to your phone.</p>
+  <h3>🔌 MCP Server + Telegram Delivery</h3>
+  <p>Goal: Hermes can query the pipeline via MCP. Briefs arrive on Telegram automatically.</p>
 
   <h3>Tasks</h3>
   <ul class="task-list">
-    <li>Build event detection engine (<code>detection/engine.py</code>) — runs on schedule, queries DB for trigger conditions</li>
-    <li>Implement detection rules: price drop ≥5%, volume spike ≥3x avg, stop-loss proximity</li>
-    <li>Implement news-based triggers: keyword matching, breaking news detection</li>
-    <li>Build alert dispatch system (<code>notifications/dispatcher.py</code>) — routes alerts to correct tier/channel</li>
-    <li>Build Telegram integration (<code>notifications/telegram.py</code>) — format messages nicely with emoji/links</li>
-    <li>Implement batching for 🟡 Important tier (aggregate every 30 min)</li>
-    <li>Add alert_rules table management API (CRUD for custom rules)</li>
-    <li>Build alerts panel in dashboard — show recent alerts, mark as read</li>
-    <li>Add alert badge/indicator to watchlist items when they have active alerts</li>
-    <li>Create Telegram bot via BotFather, document setup steps</li>
-    <li>Verify: trigger a test alert, see it arrive on Telegram within 2 min</li>
+    <li>Build Telegram client (<code>delivery/telegram.py</code>) — send formatted messages, handle markdown escaping</li>
+    <li>Schedule morning brief delivery (7:00 AM) and evening brief delivery (6:00 PM)</li>
+    <li>Add critical alert detection — high-urgency signals on held positions trigger immediate Telegram push</li>
+    <li>Build Context Builder (<code>context/builder.py</code>) — assembles &lt;2,500 token snapshot from DB: brief + signals + theses + price deltas</li>
+    <li>Build MCP server (<code>mcp/server.py</code>) — Python MCP SDK, stdio transport</li>
+    <li>Implement MCP tools:
+      <ul>
+        <li><code>get_portfolio_snapshot()</code> — positions + price deltas + P&L</li>
+        <li><code>get_morning_brief()</code> — latest brief text</li>
+        <li><code>get_signals(ticker, days)</code> — signals for a ticker in time window</li>
+        <li><code>get_thesis(ticker)</code> — accumulated thesis text for a ticker</li>
+        <li><code>search_news(query)</code> — top 5 relevant articles</li>
+      </ul>
+    </li>
+    <li>Register MCP server in Hermes config on desktop machine</li>
+    <li>Verify: morning brief arrives on Telegram at 7 AM; Hermes can call <code>get_morning_brief()</code> and get the same text</li>
   </ul>
 
   <h3>Deliverables</h3>
   <ul>
-    <li>Automatic event detection running continuously</li>
-    <li>Telegram notifications for critical + important alerts</li>
-    <li>Alert management in dashboard</li>
-    <li>Configurable alert rules</li>
+    <li>Telegram briefs delivered 2x daily automatically</li>
+    <li>Critical alerts pushed immediately on high-urgency signals</li>
+    <li>MCP server running, Hermes connected</li>
+    <li>All 5 MCP tools working end-to-end</li>
   </ul>
 
-  <p class="dep">Dependencies: Phase 1 (data in DB), Phase 2 (dashboard for alert UI)</p>
+  <p class="dep">Dependencies: Phase 2 (briefs + signals must exist in DB)</p>
 </div>
 
 <!-- ─────────────────────────────────────── -->
-<h2>Phase 4 — Extended Data Sources</h2>
+<h2>Phase 4 — Advanced Signals</h2>
 
 <div class="phase-card phase-4">
-  <h3>📡 More Intelligence, More Sources</h3>
-  <p>Goal: Broaden the intelligence net — insider trades, politician disclosures, sentiment from social media.</p>
+  <h3>📡 Reddit, Insider Trades, Pattern Detection</h3>
+  <p>Goal: Broader signal sources. The pipeline surfaces things no single news feed would catch.</p>
 
   <h3>Tasks</h3>
   <ul class="task-list">
-    <li>Build SEC EDGAR collector (<code>collectors/filings.py</code>) — Form 4 (insider trades), 8-K (major events)</li>
-    <li>Build politician trade collector (<code>collectors/insider.py</code>) — Capitol Trades or Quiver Quant scraping</li>
-    <li>Build Reddit sentiment collector (<code>collectors/sentiment.py</code>) — r/wallstreetbets, r/stocks mention counts + tone</li>
-    <li>Build X/Twitter sentiment collector — trending $cashtags, breaking news accounts</li>
-    <li>Add RSS feed aggregator — Reuters, MarketWatch, Seeking Alpha, Benzinga</li>
-    <li>Normalize all sources into common event format for detection engine</li>
-    <li>Add new detection rules: insider sell &gt;$1M, politician trade on watchlist stock, sentiment spike</li>
-    <li>Enhance dashboard news feed with source categorization and filtering</li>
-    <li>Add sentiment indicator to watchlist items (mini gauge or color)</li>
-    <li>Verify: see insider trades, politician disclosures, sentiment scores flowing in</li>
+    <li>Build Reddit collector (<code>collectors/reddit.py</code>) — r/wallstreetbets, r/stocks; PRAW API; mention counts + tone</li>
+    <li>Build insider trade collector (<code>collectors/insider.py</code>) — Capitol Trades or Quiver Quant; Form 4 buys/sells for watched tickers</li>
+    <li>Build politician disclosure collector — STOCK Act disclosures; filter for watched tickers</li>
+    <li>Feed Reddit and insider sources through the same filter pipeline (FinBERT-compatible adapters)</li>
+    <li>Add new signal types: <code>insider_buy</code>, <code>insider_sell</code>, <code>politician_trade</code>, <code>reddit_spike</code></li>
+    <li>Build pattern detector — identifies consecutive bearish signals, unusual volume + negative sentiment combos</li>
+    <li>Add thesis updater — when 3+ signals in 48h point the same direction on a held position, update the stored thesis</li>
+    <li>Add <code>get_insider_activity(ticker)</code> MCP tool</li>
+    <li>Verify: an insider trade on a held position generates a critical Telegram alert within 30 min of disclosure</li>
   </ul>
 
   <h3>Deliverables</h3>
   <ul>
-    <li>5+ active data sources feeding the system</li>
-    <li>Insider + politician trade tracking</li>
-    <li>Social sentiment scoring per stock</li>
-    <li>Richer event detection with more signal types</li>
+    <li>Reddit sentiment feeding into signal store</li>
+    <li>Insider + politician trade tracking active</li>
+    <li>Pattern detection surfacing compound signals</li>
+    <li>Theses auto-updated from signal accumulation</li>
   </ul>
 
-  <p class="dep">Dependencies: Phase 1 (schema), Phase 3 (detection engine for new rule types)</p>
+  <p class="dep">Dependencies: Phases 1–3 complete. Reddit API credentials + Telegram bot configured.</p>
 </div>
 
 <!-- ─────────────────────────────────────── -->
-<h2>Phase 5 — AI Analysis Layer</h2>
-
-<div class="phase-card phase-5">
-  <h3>🧠 DeepSeek Intelligence</h3>
-  <p>Goal: AI runs 2x daily, summarizes trends, tunes alerts, generates insights you couldn't get manually.</p>
-
-  <h3>Tasks</h3>
-  <ul class="task-list">
-    <li>Build OpenRouter client (<code>ai/client.py</code>) — handles DeepSeek Flash calls, retries, token management</li>
-    <li>Design prompt templates (<code>ai/prompts.py</code>) — morning brief, evening recap, stock deep-dive, alert tuning</li>
-    <li>Build daily analysis job (<code>ai/analysis.py</code>) — queries DB, assembles context, calls AI, stores results</li>
-    <li>Morning brief: portfolio summary, overnight news, key events today, risk flags</li>
-    <li>Evening recap: day performance, notable moves, sentiment changes, what to watch tomorrow</li>
-    <li>Alert tuning: AI reviews recent alert history, suggests threshold adjustments</li>
-    <li>Pattern detection: unusual correlations, sector rotation signals, momentum shifts</li>
-    <li>Store AI outputs in DB (new <code>ai_insights</code> table)</li>
-    <li>Add AI insights panel to dashboard — show latest analysis, recommendations</li>
-    <li>Send morning brief + evening recap via Telegram</li>
-    <li>Verify: receive coherent, useful morning brief on Telegram with real data</li>
-  </ul>
-
-  <h3>Deliverables</h3>
-  <ul>
-    <li>Automated 2x daily AI analysis</li>
-    <li>Morning brief + evening recap on Telegram</li>
-    <li>AI-powered alert tuning suggestions</li>
-    <li>Insights panel in dashboard</li>
-  </ul>
-
-  <p class="dep">Dependencies: Phase 1-4 (needs rich data to analyze), OpenRouter API key</p>
-</div>
-
-<!-- ─────────────────────────────────────── -->
-<h2>Phase 6 — MCP Server + Hermes Integration</h2>
-
-<div class="phase-card phase-6">
-  <h3>🔌 Agent Access Layer</h3>
-  <p>Goal: Hermes (or any MCP-compatible agent) can query and interact with the full financial intelligence system.</p>
-
-  <h3>Tasks</h3>
-  <ul class="task-list">
-    <li>Build MCP server (<code>mcp/server.py</code>) — SSE/HTTP transport, bearer token auth</li>
-    <li>Define MCP tools: <code>get_portfolio</code>, <code>get_prices</code>, <code>get_news</code>, <code>get_alerts</code>, <code>get_sentiment</code></li>
-    <li>Define MCP tools (write): <code>add_to_watchlist</code>, <code>create_alert</code>, <code>dismiss_alert</code></li>
-    <li>Define MCP tools (AI): <code>get_latest_analysis</code>, <code>request_stock_deep_dive</code></li>
-    <li>Test with Hermes agent on desktop machine</li>
-    <li>Build Hermes skill definition for financial intelligence queries</li>
-    <li>Configure Hermes → MCP connection (network, auth)</li>
-    <li>Verify: Hermes can ask "How's my portfolio?" and get a real answer</li>
-  </ul>
-
-  <h3>Deliverables</h3>
-  <ul>
-    <li>MCP server running alongside API server</li>
-    <li>Full read+write tool surface for AI agents</li>
-    <li>Hermes connected and querying live data</li>
-  </ul>
-
-  <p class="dep">Dependencies: All previous phases. Executed on desktop machine with Hermes.</p>
-</div>
-
-<!-- ─────────────────────────────────────── -->
-<h2>Execution Order & Milestones</h2>
+<h2>Milestone Summary</h2>
 
 <table>
-  <tr><th>Phase</th><th>Milestone</th><th>You'll Know It's Done When...</th></tr>
-  <tr><td>1</td><td>Data flows</td><td>API returns real AAPL prices from your local DB</td></tr>
-  <tr><td>2</td><td>Dashboard works</td><td>You open the browser and see your portfolio with live charts</td></tr>
-  <tr><td>3</td><td>Alerts fire</td><td>Phone buzzes with a Telegram notification about a stock drop</td></tr>
-  <tr><td>4</td><td>Full intelligence</td><td>Insider trades and Reddit sentiment show up in your feed</td></tr>
-  <tr><td>5</td><td>AI speaks</td><td>Morning brief lands on Telegram with actionable insights</td></tr>
-  <tr><td>6</td><td>Hermes connected</td><td>You ask Hermes "what should I watch today?" and get a smart answer</td></tr>
+  <tr><th>Phase</th><th>You'll Know It's Done When...</th></tr>
+  <tr><td>1 — Foundation</td><td>SQLite has 100+ articles and fresh prices after 10 minutes of running</td></tr>
+  <tr><td>2 — Intelligence</td><td>Morning brief is in the DB with real signals extracted by DeepSeek</td></tr>
+  <tr><td>3 — Hermes</td><td>Morning brief arrives on Telegram at 7 AM; Hermes answers "what should I watch today?"</td></tr>
+  <tr><td>4 — Advanced Signals</td><td>An insider trade on a held position triggers a Telegram alert</td></tr>
 </table>
 
 <!-- ─────────────────────────────────────── -->
-<h2>Next Action</h2>
+<h2>What We Are NOT Building</h2>
 
 <div class="callout">
-  <strong>Ready to start Phase 1.</strong> First steps:
+  <ul>
+    <li>❌ React / Vite frontend — no dashboard UI</li>
+    <li>❌ FastAPI REST server — no HTTP API for humans</li>
+    <li>❌ Docker Compose — SQLite needs no infrastructure</li>
+    <li>❌ TimescaleDB hypertables — plain SQL is sufficient</li>
+    <li>❌ Alert tiers / dashboard alert UI — Telegram handles all delivery</li>
+  </ul>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<h2>Ready to Start</h2>
+
+<div class="callout callout-info">
+  <strong>Phase 1 begins with:</strong>
   <ol>
-    <li>Create <code>docker-compose.yml</code></li>
-    <li>Create <code>backend/pyproject.toml</code></li>
-    <li>Write database migrations</li>
-    <li>Build the Yahoo Finance price collector</li>
+    <li><code>uv init pipeline</code> + <code>pyproject.toml</code></li>
+    <li><code>store/schema.sql</code> — Signal Store tables</li>
+    <li><code>collectors/prices.py</code> + <code>collectors/news.py</code></li>
+    <li><code>scheduler.py</code> + <code>start.ps1</code></li>
   </ol>
-  <p>Say the word and we begin building.</p>
 </div>
 
 </body>

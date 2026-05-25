@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hermes — AI Financial Advisor Architecture</title>
+  <style>
+    :root {
+      --bg: #1a1a2e; --surface: #16213e; --border: #0f3460;
+      --accent: #e94560; --text: #eaeaea; --muted: #a0a0b0;
+      --success: #4ecdc4; --warning: #f39c12; --info: #74b9ff;
+      --code-bg: #0d1117; --deepseek: #1e3a5f; --claude: #3a1e5f;
+      --free: #1b4332;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      line-height: 1.7; padding: 2rem 4rem;
+      max-width: 1100px; margin: 0 auto;
+    }
+    h1 { color: var(--accent); font-size: 2.2rem; margin-bottom: 0.25rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 2rem; }
+    h2 { color: var(--success); font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem;
+         border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    h3 { color: var(--warning); font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    p { margin-bottom: 1rem; }
+    ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.3rem; }
+    pre {
+      background: var(--code-bg); padding: 1.2rem 1.5rem;
+      border-radius: 6px; overflow-x: auto; margin-bottom: 1.5rem;
+      border: 1px solid var(--border); font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.82rem; line-height: 1.5;
+    }
+    code {
+      background: var(--code-bg); padding: 0.15rem 0.4rem;
+      border-radius: 3px; font-family: 'Cascadia Code', monospace; font-size: 0.88rem;
+    }
+    pre code { padding: 0; background: none; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+    th, td { padding: 0.55rem 1rem; border: 1px solid var(--border); text-align: left; }
+    th { background: var(--surface); color: var(--success); }
+    .callout {
+      background: var(--surface); border-left: 4px solid var(--accent);
+      padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0;
+    }
+    .callout-info { border-left-color: var(--success); }
+    .badge {
+      display: inline-block; padding: 0.15rem 0.55rem; border-radius: 10px;
+      font-size: 0.72rem; font-weight: 700; margin-left: 4px; vertical-align: middle;
+    }
+    .free  { background: var(--free);    color: #95d5b2; }
+    .cheap { background: var(--deepseek); color: #74b9ff; }
+    .exp   { background: var(--claude);  color: #d3b4ff; }
+    .exist { background: #3a3010; color: #ffd166; }
+    .new   { background: #3a1010; color: #ff8c94; }
+  </style>
+</head>
+<body>
+
+<h1>⚡ Hermes — Personal AI Financial Advisor</h1>
+<p class="subtitle">Architecture design · financePortal · 2026-05-24</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>The Key Insight</h2>
+<div class="callout callout-info">
+  <strong>Never feed raw data to the expensive model.</strong><br>
+  Pre-digest everything into structured intelligence packets on a schedule using cheap models.
+  By the time the user asks Claude a question, a 2–4 KB curated brief is already waiting —
+  not 50 KB of raw news. This makes every user query cheap, fast, and high-quality.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>System Diagram</h2>
+<pre>
+╔══════════════════════════════════════════════════════════════════════╗
+║                       EXTERNAL SOURCES                              ║
+║   Yahoo Finance (prices)  │  Finnhub (news)  │  SEC EDGAR (optional) ║
+╚═══════════╤══════════════════════╤═══════════════════════╤═══════════╝
+            ▼                      ▼                       ▼
+╔══════════════════════════════════════════════════════════════════════╗
+║                  DATA LAYER  ⬡ existing                             ║
+║                                                                      ║
+║  TimescaleDB (PostgreSQL)                                            ║
+║  ┌──────────────────┐ ┌──────────┐ ┌─────────────┐                  ║
+║  │ prices_intraday  │ │  news    │ │ instruments  │                  ║
+║  │ prices_daily     │ │          │ │ (is_owned)   │                  ║
+║  └──────────────────┘ └──────────┘ └─────────────┘                  ║
+║  ┌──────────┐ ┌────────────────┐ ┌──────────────┐ ┌───────────────┐ ║
+║  │  briefs  │ │    alerts      │ │pos_theses    │ │ conversations │ ║
+║  │  ★ new   │ │    ★ new       │ │  ★ new       │ │   ★ new       │ ║
+║  └──────────┘ └────────────────┘ └──────────────┘ └───────────────┘ ║
+╚═══════════╤══════════════════════════════════════════════════════════╝
+            ▼
+╔══════════════════════════════════════════════════════════════════════╗
+║             INTELLIGENCE PIPELINE  ★ new                            ║
+║                                                                      ║
+║  [7 am ET daily]  Digest Engine                                      ║
+║    SQL → news for owned symbols from last 18h                        ║
+║    DeepSeek: "summarize these headlines for a portfolio holder"       ║
+║    → stores per-symbol briefs  [$0.001/run]                          ║
+║                                                                      ║
+║  [every 2h]  Alert Scanner — ZERO AI COST                            ║
+║    SQL rules: price ±5%, volume 3× avg, earnings today               ║
+║    → writes structured alerts table  [$0.00/run]                     ║
+║                                                                      ║
+║  [Monday 8 am]  Macro Digest                                         ║
+║    Fetch macro news (Fed/CPI) → DeepSeek summary  [$0.002/run]       ║
+╚═══════════╤══════════════════════════════════════════════════════════╝
+            ▼
+╔══════════════════════════════════════════════════════════════════════╗
+║             CONTEXT BUILDER  ★ new  (zero AI cost)                  ║
+║                                                                      ║
+║  Single pre-flight SQL query assembles:                              ║
+║    • Portfolio snapshot — positions + 1d/5d/30d returns              ║
+║    • Today's briefs from briefs table                                ║
+║    • Active alerts                                                   ║
+║    • Position theses (your buy rationale for each holding)           ║
+║    • Last 5 conversation turns (short-term memory)                   ║
+║                                                                      ║
+║  Output: ~2–4 KB structured JSON → injected as system prompt         ║
+╚═══════════╤══════════════════════════════════════════════════════════╝
+            ▼
+╔══════════════════════════════════════════════════════════════════════╗
+║             HERMES AGENT  ★ new                                      ║
+║                                                                      ║
+║  POST /api/chat                                                      ║
+║                                                                      ║
+║  Router (heuristic, no AI cost):                                     ║
+║    "morning" / "what happened" → DeepSeek + cached brief             ║
+║    "should I" / "analyze" / "research" → Claude 3.5 Sonnet           ║
+║    everything else → DeepSeek                                        ║
+║                                                                      ║
+║  Function-calling tools Hermes can invoke:                           ║
+║    get_price_history(symbol, days)                                   ║
+║    get_recent_news(symbol, hours)                                    ║
+║    get_portfolio_correlation()                                       ║
+║    update_thesis(symbol, new_thesis)                                 ║
+║    get_sector_exposure()                                             ║
+║                                                                      ║
+║  Stores every turn in conversations table                            ║
+╚═══════════╤══════════════════════════════════════════════════════════╝
+            ▼
+╔══════════════════════════════════════════════════════════════════════╗
+║             FRONTEND CHAT  ★ new  (React page, existing app)        ║
+║   Chat panel  │  Morning brief card  │  Alert banner                 ║
+╚══════════════════════════════════════════════════════════════════════╝
+</pre>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>Components</h2>
+
+<h3>1. Data Layer <span class="badge exist">existing</span></h3>
+<ul>
+  <li><strong>prices_daily / prices_intraday</strong> — TimescaleDB hypertables, collected via Yahoo Finance every 5 min (market hours). <em>No changes needed.</em></li>
+  <li><strong>news</strong> — Finnhub articles, collected every 15 min. <em>No changes needed.</em></li>
+  <li><strong>instruments</strong> — Your universe of stocks; <code>is_owned = true</code> is the portfolio source of truth.</li>
+</ul>
+
+<h3>2. New DB Tables <span class="badge new">new</span></h3>
+<table>
+  <tr><th>Table</th><th>Columns</th><th>Purpose</th></tr>
+  <tr><td><code>briefs</code></td><td>symbol, date, summary JSONB, generated_at</td><td>Pre-digested daily news per holding</td></tr>
+  <tr><td><code>alerts</code></td><td>symbol, type, message, severity, triggered_at, dismissed_at</td><td>Rule-based material events</td></tr>
+  <tr><td><code>position_theses</code></td><td>symbol, thesis TEXT, risk_tolerance, target_price, updated_at</td><td>Your buy rationale per holding — Hermes's long-term memory</td></tr>
+  <tr><td><code>conversations</code></td><td>id, role, content, model_used, tokens_in, tokens_out, created_at</td><td>Chat history + token tracking</td></tr>
+</table>
+
+<h3>3. Digest Engine <span class="badge new">new</span> <span class="badge cheap">DeepSeek</span></h3>
+<p>
+  Runs at 7 am ET via APScheduler (extending the existing scheduler).
+  Fetches last 18 h of news for each <code>is_owned</code> symbol, calls DeepSeek with a tight
+  prompt ("bullet-point what matters for a long-term holder"), stores the result in <code>briefs</code>.
+  Cost: ~$0.001 per portfolio run. Idempotent — skips if today's brief already exists.
+</p>
+
+<h3>4. Alert Scanner <span class="badge new">new</span> <span class="badge free">$0</span></h3>
+<p>
+  Pure SQL job, runs every 2 h. Detects: price move ≥5% vs prior close, volume ≥3× 30-day
+  average, earnings date = today (from instrument metadata), new FDA/SEC headline keywords.
+  Writes structured rows to <code>alerts</code>. No AI involved — rules are deterministic and auditable.
+</p>
+
+<h3>5. Context Builder <span class="badge new">new</span> <span class="badge free">$0</span></h3>
+<p>
+  A single Python function called at the start of every <code>/api/chat</code> request.
+  Runs one SQL query that joins portfolio positions, today's briefs, active alerts, theses,
+  and the last 5 conversation turns into a ~2–4 KB JSON blob.
+  That blob becomes the system prompt. The expensive model sees only curated facts.
+</p>
+
+<h3>6. Hermes Agent <span class="badge new">new</span></h3>
+<p>
+  A new FastAPI router at <code>/api/chat</code>. Receives a user message, builds context,
+  classifies query complexity (keyword heuristic — free), routes to the right model via
+  OpenRouter, stores the turn, returns the response.
+</p>
+
+<h3>7. Frontend Chat Page <span class="badge new">new</span></h3>
+<p>
+  A new React route in the existing app. Simple chat panel + morning brief card (from
+  <code>briefs</code> table) + alert banner (from <code>alerts</code>). Talks to <code>/api/chat</code>.
+  Reuses existing Tailwind/shadcn components.
+</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>Token Cost Model</h2>
+<table>
+  <tr><th>Action</th><th>Trigger</th><th>Model</th><th>Est. Cost</th></tr>
+  <tr><td>Morning digest (all holdings)</td><td>7 am scheduler</td><td>DeepSeek</td><td class="cheap">~$0.001</td></tr>
+  <tr><td>Alert detection</td><td>Every 2 h, SQL-only</td><td>None</td><td class="free">$0.00</td></tr>
+  <tr><td>Macro weekly digest</td><td>Monday scheduler</td><td>DeepSeek</td><td class="cheap">~$0.002</td></tr>
+  <tr><td>"What happened today?"</td><td>User chat</td><td>DeepSeek + cached brief</td><td class="cheap">~$0.002</td></tr>
+  <tr><td>"Should I sell NVDA?"</td><td>User chat</td><td>Claude 3.5 Sonnet</td><td class="exp">~$0.05</td></tr>
+  <tr><td>"Update my NVDA thesis"</td><td>User chat</td><td>Claude 3.5 Sonnet</td><td class="exp">~$0.03</td></tr>
+  <tr><td>Portfolio correlation</td><td>User chat / computed</td><td>None (SQL + numpy)</td><td class="free">$0.00</td></tr>
+  <tr><th colspan="3">Typical daily total (light use)</th><th>~$0.05–0.10/day</th></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>Data Freshness Requirements</h2>
+<table>
+  <tr><th>Data type</th><th>Required freshness</th><th>How achieved</th></tr>
+  <tr><td>Prices</td><td>Daily close (end of day)</td><td>Existing Yahoo Finance collector</td></tr>
+  <tr><td>News</td><td>Within hours</td><td>Existing Finnhub collector (15 min)</td></tr>
+  <tr><td>Earnings/filings</td><td>Same day</td><td>Alert scanner checks instrument metadata + news keywords</td></tr>
+  <tr><td>Macro (Fed, CPI)</td><td>Weekly</td><td>Monday digest job</td></tr>
+  <tr><td>Portfolio positions</td><td>Always current</td><td><code>instruments.is_owned</code> — user updates manually or via future sync</td></tr>
+  <tr><td>Pre-digested briefs</td><td>Daily (7 am)</td><td>Digest Engine</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>Build vs Buy</h2>
+<table>
+  <tr><th>Capability</th><th>Decision</th><th>Rationale</th></tr>
+  <tr><td>Price collection</td><td>✅ Already built</td><td>Yahoo Finance via yfinance works fine</td></tr>
+  <tr><td>News collection</td><td>✅ Already built</td><td>Finnhub free tier is sufficient</td></tr>
+  <tr><td>LLM inference</td><td>Buy — OpenRouter</td><td>Instant access to DeepSeek + Claude; no infra</td></tr>
+  <tr><td>Vector DB / embeddings</td><td>❌ Skip</td><td>Overkill for 1 person's portfolio; FTS on briefs is enough</td></tr>
+  <tr><td>Real-time streaming prices</td><td>❌ Skip</td><td>Non-day-trader; daily close is the right signal</td></tr>
+  <tr><td>Portfolio sync (Fidelity)</td><td>Manual for now</td><td>No public API; scraping is fragile. Manual <code>is_owned</code> updates are fast.</td></tr>
+  <tr><td>Digest Engine</td><td>✅ Build</td><td>~100 lines Python; tight integration with existing scheduler</td></tr>
+  <tr><td>Alert Scanner</td><td>✅ Build</td><td>~80 lines Python/SQL; rules you own and can tune</td></tr>
+  <tr><td>Hermes Agent</td><td>✅ Build</td><td>~150 lines Python; thin wrapper around OpenRouter</td></tr>
+  <tr><td>Chat frontend</td><td>✅ Build</td><td>~200 lines React; single page in existing app</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>Build Order (Phases)</h2>
+<ol>
+  <li>
+    <strong>Phase 1 — Memory foundation</strong><br>
+    Add <code>briefs</code>, <code>alerts</code>, <code>position_theses</code>, <code>conversations</code> tables.
+    Seed initial theses for each holding.
+  </li>
+  <li>
+    <strong>Phase 2 — Intelligence pipeline</strong><br>
+    Digest Engine + Alert Scanner + Macro Digest jobs.
+    Validate output quality without any UI.
+  </li>
+  <li>
+    <strong>Phase 3 — Hermes agent API</strong><br>
+    <code>POST /api/chat</code> with Context Builder, model router, function-calling tools.
+    Test via curl before building UI.
+  </li>
+  <li>
+    <strong>Phase 4 — Chat UI</strong><br>
+    React page: chat panel + morning brief card + alert banner.
+    Integrates into existing sidebar nav.
+  </li>
+</ol>
+
+<div class="callout">
+  <strong>Why this architecture wins for a single-person portfolio:</strong><br>
+  The advisor is not a search engine — it's a knowledgeable colleague who already read the news
+  before you asked. Scheduling intelligence <em>ahead</em> of user queries means the expensive model
+  (Claude) only runs when you need genuine reasoning, not retrieval. The context it receives is
+  curated, not dumped — so responses are faster, cheaper, and sharper.
+</div>
+
+</body>
+</html>
