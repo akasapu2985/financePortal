@@ -9,6 +9,8 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+- 2026-05-24T16:42:34-07:00 — The frontend must define Tailwind v4 breakpoint tokens inside `frontend/src/styles/index.css` `@theme` for responsive `sm:/lg:/xl:` utilities to compile; without those tokens the dashboard silently collapses to a single-column desktop layout.
+- 2026-05-24T16:42:34-07:00 — Backend routes are mounted at the root path (`/watchlists`, `/instruments`, `/prices`, `/news`), so the Vite dev proxy has to rewrite `/api/*` requests instead of forwarding the prefix unchanged.
 - 2026-05-24T12:51:37-07:00 — The frontend data layer is split between normalized axios wrappers in `frontend/src/services/api.ts`/`types.ts` and React Query hooks in `frontend/src/hooks/queries/useMarketData.ts`, with app-wide cache defaults centralized in `frontend/src/providers/QueryProvider.tsx`.
 - 2026-05-24T12:51:37-07:00 — Tailwind CSS v4 is wired through the Vite frontend, with design-spec tokens centralized in `frontend/src/styles/tokens.css` and shared theme/status classes in `frontend/src/styles/index.css`.
 - 2026-05-24T12:51:37-07:00 — Dashboard shell composition now lives in `frontend/src/layouts/DashboardLayout.tsx` and reusable shell components under `frontend/src/components/shell/`, with `App.tsx` responsible only for wiring placeholder panel content.
@@ -18,3 +20,4 @@
 - 2026-05-24T19:51:02Z — Team update: Renarin design spec complete (HTML conversion in progress), Kaladin backend ready, Adolin backlog ready. Frontend scaffold dependencies materializing. Await Renarin HTML + Phase 1 verification.
 - 2026-05-24T12:51:37-07:00 — Dashboard symbol coordination now lives in `frontend/src/hooks/useSelectedSymbol.ts`, and both watchlist selection plus future symbol-driven panels are expected to read/write the same global context.
 - 2026-05-24T12:51:37-07:00 — The dashboard’s live market UI is split between `frontend/src/components/watchlist/` for tabbed watchlists + per-row quote polling and `frontend/src/components/chart/` for the Lightweight Charts candlestick/volume workspace driven by shared range-aware price helpers in `frontend/src/utils/marketData.ts`.
+- 2026-05-24T17:10:08-07:00 — `npx shadcn@latest init` works against the Vite + Tailwind CSS v4 frontend, so shared dashboard primitives now live under `frontend/src/components/ui/` and should be styled against the existing tokenized dark palette instead of ad-hoc raw elements.

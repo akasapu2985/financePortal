@@ -1,10 +1,19 @@
 import type { PropsWithChildren } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ApiClientError } from '@/services/api'
 
 const FIVE_MINUTES = 5 * 60 * 1000
 const ONE_MINUTE = 60 * 1000
 const THIRTY_SECONDS = 30 * 1000
 const MAX_RETRY_DELAY_MS = 30 * 1000
+
+const shouldRetryQuery = (failureCount: number, error: unknown) => {
+  if (error instanceof ApiClientError && error.status === 404) {
+    return false
+  }
+
+  return failureCount < 3
+}
 
 const createQueryClient = () => {
   const client = new QueryClient({
@@ -12,7 +21,7 @@ const createQueryClient = () => {
       queries: {
         staleTime: FIVE_MINUTES,
         gcTime: 15 * 60 * 1000,
-        retry: 3,
+        retry: shouldRetryQuery,
         retryDelay: (attemptIndex) => Math.min(1_000 * 2 ** attemptIndex, MAX_RETRY_DELAY_MS),
         refetchOnWindowFocus: true,
       },

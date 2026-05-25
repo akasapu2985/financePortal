@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+import { Trash2, TrendingDown, TrendingUp } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { usePrices } from '@/hooks/queries/useMarketData'
 import type { Instrument } from '@/services/types'
 import { formatPercent, formatPrice, getQuoteSummary, getSparklineSeries } from '@/utils/marketData'
@@ -68,31 +70,39 @@ export const WatchlistItem = ({ instrument, isRemoving, isSelected, onRemove, on
 
   const changeClassName = getChangeClassName(quoteSummary.changePercent)
   const sparkBarClassName = getSparkBarClassName(quoteSummary.changePercent)
+  const ChangeIcon = (quoteSummary.changePercent ?? 0) >= 0 ? TrendingUp : TrendingDown
 
   return (
-    <div className="grid min-h-14 grid-cols-[minmax(0,1.4fr)_minmax(84px,0.9fr)_minmax(72px,0.8fr)_56px_44px] items-center gap-3 rounded-xl">
+    <div className="grid grid-cols-[minmax(0,1fr)_40px] gap-2">
       <button
         type="button"
         onClick={() => onSelect(normalizedSymbol)}
         className={[
-          'group relative col-span-4 grid min-h-14 grid-cols-[minmax(0,1.4fr)_minmax(84px,0.9fr)_minmax(72px,0.8fr)_56px] items-center gap-3 overflow-hidden rounded-xl border border-transparent px-3 py-2 text-left transition-colors',
-          'hover:bg-surface-hover focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent',
-          isSelected ? 'bg-surface-selected' : 'bg-transparent',
+          'group relative grid min-h-[4.5rem] grid-cols-[minmax(0,1.4fr)_minmax(88px,0.9fr)_minmax(82px,0.8fr)_74px] items-center gap-3 overflow-hidden rounded-2xl border px-3 py-3 text-left transition-all',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35',
+          isSelected
+            ? 'border-accent/40 bg-surface-selected/90 shadow-[0_12px_32px_rgba(6,21,38,0.45)]'
+            : 'border-border-subtle/70 bg-surface-2/70 hover:border-border-strong hover:bg-surface-hover/80',
         ].join(' ')}
         aria-pressed={isSelected}
       >
-        {isSelected ? <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-accent" aria-hidden="true" /> : null}
+        {isSelected ? <span className="absolute inset-y-3 left-0 w-0.5 rounded-full bg-accent" aria-hidden="true" /> : null}
 
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-text-primary">{normalizedSymbol}</p>
-          <p className="truncate text-2xs text-text-muted">{instrument.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="truncate text-sm font-semibold text-text-primary">{normalizedSymbol}</p>
+            <span className="rounded-full border border-border-subtle/70 bg-app/60 px-1.5 py-0.5 font-mono text-[0.625rem] text-text-muted">
+              EQ
+            </span>
+          </div>
+          <p className="mt-1 truncate text-xs text-text-muted">{instrument.name}</p>
         </div>
 
         <div className="text-right">
           {isLoading && !quoteData ? (
             <div className="ml-auto h-4 w-16 animate-pulse rounded bg-surface-3" aria-hidden="true" />
           ) : (
-            <span className="data-value text-sm">{formatPrice(quoteSummary.currentPrice)}</span>
+            <span className="font-mono text-sm font-semibold text-text-primary">{formatPrice(quoteSummary.currentPrice)}</span>
           )}
         </div>
 
@@ -100,36 +110,37 @@ export const WatchlistItem = ({ instrument, isRemoving, isSelected, onRemove, on
           {isLoading && !quoteData ? (
             <div className="ml-auto h-4 w-14 animate-pulse rounded bg-surface-3" aria-hidden="true" />
           ) : (
-            <span className={changeClassName}>{formatPercent(quoteSummary.changePercent)}</span>
+            <div className="flex items-center justify-end gap-1">
+              <ChangeIcon className={`size-3 ${changeClassName}`} />
+              <span className={changeClassName}>{formatPercent(quoteSummary.changePercent)}</span>
+            </div>
           )}
         </div>
 
         <div className="flex justify-end">
-          <div className="flex h-5 w-14 items-center justify-end rounded-full bg-surface-3 px-1.5">
+          <div className="w-full max-w-[4.5rem] rounded-full border border-border-subtle/70 bg-app/60 p-1">
             {isLoading && !quoteData ? (
               <div className="h-1.5 w-full animate-pulse rounded-full bg-surface-hover" aria-hidden="true" />
             ) : (
-              <div className="h-1.5 w-full rounded-full bg-app/70">
-                <div
-                  className={`h-full rounded-full ${sparkBarClassName}`}
-                  style={{ width: `${sparklineWidth}%` }}
-                  aria-hidden="true"
-                />
+              <div className="h-1.5 w-full rounded-full bg-surface-3">
+                <div className={`h-full rounded-full ${sparkBarClassName}`} style={{ width: `${sparklineWidth}%` }} aria-hidden="true" />
               </div>
             )}
           </div>
         </div>
       </button>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-sm"
         onClick={() => onRemove(normalizedSymbol)}
         disabled={isRemoving}
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-border-subtle bg-surface-2 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
+        className="self-center border border-border-subtle/70 bg-surface-2/80 text-text-secondary hover:bg-market-loss/10 hover:text-market-loss"
         aria-label={`Remove ${normalizedSymbol} from watchlist`}
       >
-        {isRemoving ? '…' : '×'}
-      </button>
+        {isRemoving ? '…' : <Trash2 className="size-3.5" />}
+      </Button>
     </div>
   )
 }

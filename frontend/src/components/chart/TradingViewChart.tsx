@@ -10,6 +10,7 @@ import {
   type UTCTimestamp,
 } from 'lightweight-charts'
 import { usePrices } from '@/hooks/queries/useMarketData'
+import { ApiClientError } from '@/services/api'
 import type { PriceTimeRange } from '@/services/types'
 import { getSeriesForRange } from '@/utils/marketData'
 
@@ -23,7 +24,7 @@ const toTimestamp = (value: string) => Math.floor(new Date(value).getTime() / 10
 export const TradingViewChart = ({ symbol, timeRange }: TradingViewChartProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const normalizedSymbol = symbol.trim().toUpperCase()
-  const { data, isLoading, isFetching, isError } = usePrices(normalizedSymbol, timeRange)
+  const { data, error, isLoading, isFetching, isError } = usePrices(normalizedSymbol, timeRange)
   const priceSeries = data?.symbol === normalizedSymbol ? data : undefined
 
   const chartSeries = useMemo(() => {
@@ -170,32 +171,34 @@ export const TradingViewChart = ({ symbol, timeRange }: TradingViewChartProps) =
     }
   }, [chartSeries.candles, chartSeries.volumes, timeRange])
 
-  const isChartLoading = isLoading || !priceSeries
+  const hasMissingPriceHistory = error instanceof ApiClientError && error.status === 404
+  const isChartLoading = (isLoading || isFetching) && !priceSeries && !isError
   const hasNoData = !isChartLoading && !isError && chartSeries.candles.length === 0
 
   return (
-    <div className="relative h-full min-h-[22rem] rounded-xl border border-border-subtle bg-canvas">
-      <div ref={containerRef} className="h-full min-h-[22rem] w-full" />
+    <div className="relative h-full min-h-[24rem] overflow-hidden rounded-[1.35rem] border border-border-strong/70 bg-canvas shadow-[0_24px_80px_rgba(0,0,0,0.28)] ring-1 ring-white/4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-accent/8 to-transparent" aria-hidden="true" />
+      <div ref={containerRef} className="h-full min-h-[24rem] w-full" />
 
       {isChartLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-canvas/85 text-sm text-text-secondary">
-          Loading chart...
+        <div className="absolute inset-0 flex items-center justify-center bg-canvas/88 text-sm text-text-secondary">
+          Loading chart workspace…
         </div>
       ) : null}
 
       {hasNoData ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-canvas/85 px-4 text-center text-sm text-text-secondary">
+        <div className="absolute inset-0 flex items-center justify-center bg-canvas/88 px-4 text-center text-sm text-text-secondary">
           No price history available for {normalizedSymbol}
         </div>
       ) : null}
 
       {isFetching && priceSeries ? (
-        <div className="absolute right-3 top-3 rounded-full bg-surface-3 px-2 py-1 text-xs text-text-secondary">Refreshing</div>
+        <div className="absolute right-3 top-3 rounded-full border border-border-subtle/70 bg-surface-3/90 px-2 py-1 text-xs text-text-secondary">Refreshing</div>
       ) : null}
 
       {isError && !priceSeries ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-canvas/85 px-4 text-center text-sm text-text-secondary">
-          Unable to load chart data right now.
+        <div className="absolute inset-0 flex items-center justify-center bg-canvas/88 px-4 text-center text-sm text-text-secondary">
+          {hasMissingPriceHistory ? `Price history unavailable for ${normalizedSymbol} yet.` : 'Unable to load chart data right now.'}
         </div>
       ) : null}
     </div>

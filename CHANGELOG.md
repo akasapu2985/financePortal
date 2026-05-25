@@ -4,8 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Added root `setup.ps1` to bootstrap fresh Windows machines with prerequisite checks, winget-based installs for Docker Desktop/Python 3.12/Node.js LTS/GitHub CLI, official `uv` installation, Playwright Chromium setup, PATH fixups, `npm install`, and an end-of-run summary
+- Kaladin recorded the PATH persistence decision for setup bootstrap behavior in `.squad/decisions/inbox/kaladin-setup-path-fixups.md`
+- Seeded a default backend watchlist with MSFT, MRAM, DELL, and AMZN so the dashboard has starter data on first load
+
 ### Changed
+- Updated `start.ps1` so `Ensure-Uv` uses Astral's official PowerShell installer instead of `pip install --user uv`, while keeping the `.local\bin` PATH fixup
 - Ralph reconciled issue tracker: confirmed #2–#31 closed, labeled #32–#34 as `go:ready` for Phase 2 close-out
+- Jasnah ran a Phase 1–3 verification sweep: backend pytest/Ruff passed, frontend TypeScript/lint/build passed, but Vitest and Playwright have no tests and runtime alert features remain absent outside schema definitions
+- Shallan fixed the desktop dashboard shell so Tailwind breakpoint variants render the Bloomberg-style three-column layout again, the top bar stays persistent, and the Vite dev proxy rewrites `/api/*` requests to the backend's root-mounted routes.
+- Shallan upgraded the watchlist/chart empty-state UX so the frontend auto-creates a starter watchlist from seeded instruments, selects the first symbol, and surfaces a graceful "price history unavailable" state when seeded symbols do not have chart data yet.
+- Shallan initialized `shadcn/ui` for the Tailwind v4 frontend and overhauled the dashboard into a polished dark trading workspace with upgraded top bar, watchlist, chart controls, and news cards.
 
 ## [2025-07-17]
 

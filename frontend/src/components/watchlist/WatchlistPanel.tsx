@@ -1,4 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Layers3, ListFilter, Sparkles } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { PanelFrame } from '@/components/shell/PanelFrame'
 import { WatchlistActions } from '@/components/watchlist/WatchlistActions'
 import { WatchlistItem } from '@/components/watchlist/WatchlistItem'
@@ -18,6 +22,9 @@ interface WatchlistFeedback {
 
 const MAX_VISIBLE_TABS = 5
 const FEEDBACK_RESET_DELAY_MS = 4000
+const STARTER_WATCHLIST_NAME = 'Core Watchlist'
+const STARTER_WATCHLIST_DESCRIPTION = 'Seeded market leaders for the default dashboard view.'
+const STARTER_SYMBOL_COUNT = 6
 const loadingSkeletonRows = Array.from({ length: 6 }, (_, index) => index)
 const normalizeSymbol = (symbol: string) => symbol.trim().toUpperCase()
 
@@ -31,7 +38,9 @@ export const WatchlistPanel = ({ searchQuery }: WatchlistPanelProps) => {
   const { selectedSymbol, setSelectedSymbol } = useSelectedSymbol()
   const {
     addInstrumentToWatchlist,
+    createWatchlist,
     isAddingInstrument,
+    isCreatingWatchlist,
     isRemovingInstrument,
     pendingRemoveSymbol,
     removeInstrumentFromWatchlist,
@@ -74,6 +83,13 @@ export const WatchlistPanel = ({ searchQuery }: WatchlistPanelProps) => {
     )
   }, [instruments])
 
+  const starterInstruments = useMemo(() => {
+    return instruments.slice(0, STARTER_SYMBOL_COUNT).map((instrument) => ({
+      ...instrument,
+      symbol: normalizeSymbol(instrument.symbol),
+    }))
+  }, [instruments])
+
   const watchlistInstruments = useMemo(() => {
     return (activeWatchlist?.instruments ?? []).map((instrument) => {
       const normalizedSymbol = normalizeSymbol(instrument.symbol)
@@ -113,6 +129,7 @@ export const WatchlistPanel = ({ searchQuery }: WatchlistPanelProps) => {
       symbol: normalizeSymbol(selectedSymbol),
     } as Instrument)
   }, [instrumentBySymbol, selectedSymbol])
+
   const addCandidate = useMemo(() => {
     if (exactSearchInstrument && !activeWatchlistSymbols.has(exactSearchInstrument.symbol)) {
       return exactSearchInstrument
@@ -153,6 +170,50 @@ export const WatchlistPanel = ({ searchQuery }: WatchlistPanelProps) => {
     setSelectedSymbol(filteredWatchlistInstruments[0].symbol)
   }, [filteredWatchlistInstruments, selectedSymbol, setSelectedSymbol])
 
+  useEffect(() => {
+    if (isLoadingWatchlists || watchlists.length > 0 || starterInstruments.length === 0 || isCreatingWatchlist) {
+      return
+    }
+
+    const bootstrapStarterWatchlist = async () => {
+      try {
+        const createdWatchlist = await createWatchlist({
+          name: STARTER_WATCHLIST_NAME,
+          description: STARTER_WATCHLIST_DESCRIPTION,
+        })
+
+        let hydratedWatchlist = createdWatchlist
+
+        for (const starterInstrument of starterInstruments) {
+          hydratedWatchlist = await addInstrumentToWatchlist({
+            watchlistId: hydratedWatchlist.id,
+            symbol: starterInstrument.symbol,
+          })
+        }
+
+        setRequestedWatchlistId(hydratedWatchlist.id)
+        setFeedback({
+          tone: 'info',
+          message: `Loaded ${hydratedWatchlist.instrument_count ?? hydratedWatchlist.instruments.length} starter symbols into ${hydratedWatchlist.name}.`,
+        })
+      } catch (error) {
+        setFeedback({
+          tone: 'error',
+          message: getMutationErrorMessage(error, 'Unable to load the starter watchlist right now.'),
+        })
+      }
+    }
+
+    void bootstrapStarterWatchlist()
+  }, [
+    addInstrumentToWatchlist,
+    createWatchlist,
+    isCreatingWatchlist,
+    isLoadingWatchlists,
+    starterInstruments,
+    watchlists.length,
+  ])
+
   const handleAddSymbol = async (symbol: string) => {
     if (!activeWatchlistId) {
       return
@@ -163,10 +224,7 @@ export const WatchlistPanel = ({ searchQuery }: WatchlistPanelProps) => {
       const normalizedSymbol = normalizeSymbol(symbol)
 
       setSelectedSymbol(normalizedSymbol)
-      setFeedback({
-        tone: 'success',
-        message: `Added ${normalizedSymbol} to ${updatedWatchlist.name}.`,
-      })
+      setFeedback({ tone: 'success', message: `Added ${normalizedSymbol} to ${updatedWatchlist.name}.` })
     } catch (error) {
       setFeedback({
         tone: 'error',
@@ -189,10 +247,7 @@ export const WatchlistPanel = ({ searchQuery }: WatchlistPanelProps) => {
         setSelectedSymbol(null)
       }
 
-      setFeedback({
-        tone: 'success',
-        message: `Removed ${normalizedSymbol} from ${updatedWatchlist.name}.`,
-      })
+      setFeedback({ tone: 'success', message: `Removed ${normalizedSymbol} from ${updatedWatchlist.name}.` })
     } catch (error) {
       setFeedback({
         tone: 'error',
@@ -201,41 +256,75 @@ export const WatchlistPanel = ({ searchQuery }: WatchlistPanelProps) => {
     }
   }
 
-  const isLoadingPanel = isLoadingWatchlists || (activeWatchlistId !== null && isLoadingActiveWatchlist && !activeWatchlist)
+  const isBootstrappingStarterWatchlist = watchlists.length === 0 && (isCreatingWatchlist || isAddingInstrument)
+  const isLoadingPanel = isLoadingWatchlists || isBootstrappingStarterWatchlist || (activeWatchlistId !== null && isLoadingActiveWatchlist && !activeWatchlist)
   const activeWatchlistCount = activeWatchlist?.instrument_count ?? watchlistInstruments.length
-  const watchlistCountLabel = normalizedSearchQuery
-    ? `${filteredWatchlistInstruments.length}/${activeWatchlistCount} symbols`
-    : `${activeWatchlistCount} symbols`
+  const watchlistCountLabel = isBootstrappingStarterWatchlist
+    ? 'Loading…'
+    : normalizedSearchQuery
+      ? `${filteredWatchlistInstruments.length}/${activeWatchlistCount} symbols`
+      : `${activeWatchlistCount} symbols`
 
   return (
     <PanelFrame
       as="aside"
-      title="Watchlist"
-      eyebrow="Left rail"
-      actions={<span className="rounded-full bg-surface-3 px-2 py-1 text-xs text-text-secondary">{watchlistCountLabel}</span>}
+      title="Watchlists"
+      description="Track leadership, rotate fast, and keep active names one click away."
+      actions={<Badge variant="secondary">{watchlistCountLabel}</Badge>}
       contentClassName="gap-3 p-3"
     >
-      <div className="flex flex-wrap gap-2">
-        {visibleWatchlists.map((watchlist) => {
-          const isActive = watchlist.id === activeWatchlistId
+      <Card className="border-border-subtle/70 bg-surface-2/70">
+        <CardContent className="space-y-3 px-3 py-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="rounded-xl border border-border-subtle/70 bg-surface-3/80 p-2 text-accent">
+                <Layers3 className="size-4" />
+              </div>
+              <div>
+                <p className="data-label">Active list</p>
+                <p className="text-sm font-semibold text-text-primary">{activeWatchlist?.name ?? 'Preparing watchlist'}</p>
+              </div>
+            </div>
+            <Badge className="border-border-subtle/70 bg-app/60 text-text-secondary">
+              <ListFilter className="size-3" />
+              dense view
+            </Badge>
+          </div>
 
-          return (
-            <button
-              key={watchlist.id}
-              type="button"
-              onClick={() => setRequestedWatchlistId(watchlist.id)}
-              className={[
-                'rounded-lg border px-3 py-1.5 text-sm transition-colors',
-                isActive
-                  ? 'border-accent bg-surface-selected text-text-primary'
-                  : 'border-border-subtle bg-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary',
-              ].join(' ')}
-            >
-              {watchlist.name}
-            </button>
-          )
-        })}
-      </div>
+          <div className="flex flex-wrap gap-2">
+            {visibleWatchlists.map((watchlist) => {
+              const isActive = watchlist.id === activeWatchlistId
+
+              return (
+                <Button
+                  key={watchlist.id}
+                  type="button"
+                  variant={isActive ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setRequestedWatchlistId(watchlist.id)}
+                  className={isActive ? 'shadow-[0_8px_24px_rgba(77,163,255,0.18)]' : ''}
+                >
+                  {watchlist.name}
+                </Button>
+              )
+            })}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-border-subtle/70 bg-app/50 px-3 py-2">
+              <p className="data-label">Selected</p>
+              <p className="mt-1 font-mono text-sm font-semibold text-text-primary">{selectedSymbol ?? 'Awaiting symbol'}</p>
+            </div>
+            <div className="rounded-xl border border-border-subtle/70 bg-app/50 px-3 py-2">
+              <p className="data-label">Coverage</p>
+              <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-text-primary">
+                <Sparkles className="size-3.5 text-accent" />
+                {activeWatchlistCount} names live
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <WatchlistActions
         activeWatchlistName={activeWatchlist?.name ?? null}
@@ -247,40 +336,56 @@ export const WatchlistPanel = ({ searchQuery }: WatchlistPanelProps) => {
         onAddSymbol={handleAddSymbol}
       />
 
-      <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(84px,0.9fr)_minmax(72px,0.8fr)_56px_44px] gap-3 border-b border-border-subtle px-3 pb-2 text-xs uppercase tracking-[0.08em] text-text-secondary">
+      <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(88px,0.9fr)_minmax(82px,0.8fr)_74px_40px] gap-3 px-3 pb-1 text-[0.625rem] uppercase tracking-[0.12em] text-text-muted">
         <span>Symbol</span>
         <span className="text-right">Last</span>
-        <span className="text-right">Chg %</span>
+        <span className="text-right">Change</span>
         <span className="text-right">Trend</span>
-        <span className="text-right">Edit</span>
+        <span className="text-right">&nbsp;</span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         {isLoadingPanel ? (
           <div className="space-y-2">
             {loadingSkeletonRows.map((row) => (
-              <div key={row} className="grid min-h-14 grid-cols-[minmax(0,1.4fr)_minmax(84px,0.9fr)_minmax(72px,0.8fr)_56px_44px] gap-3 rounded-xl px-3 py-2">
-                <div className="space-y-2">
-                  <div className="h-4 w-14 animate-pulse rounded bg-surface-3" />
-                  <div className="h-3 w-24 animate-pulse rounded bg-surface-3" />
+              <div key={row} className="grid grid-cols-[minmax(0,1fr)_40px] gap-2">
+                <div className="grid min-h-[4.5rem] grid-cols-[minmax(0,1.4fr)_minmax(88px,0.9fr)_minmax(82px,0.8fr)_74px] gap-3 rounded-2xl border border-border-subtle/70 bg-surface-2/60 px-3 py-3">
+                  <div className="space-y-2">
+                    <div className="h-4 w-14 animate-pulse rounded bg-surface-3" />
+                    <div className="h-3 w-24 animate-pulse rounded bg-surface-3" />
+                  </div>
+                  <div className="ml-auto h-4 w-16 animate-pulse self-center rounded bg-surface-3" />
+                  <div className="ml-auto h-4 w-14 animate-pulse self-center rounded bg-surface-3" />
+                  <div className="ml-auto h-4 w-12 animate-pulse self-center rounded bg-surface-3" />
                 </div>
-                <div className="ml-auto h-4 w-16 animate-pulse self-center rounded bg-surface-3" />
-                <div className="ml-auto h-4 w-14 animate-pulse self-center rounded bg-surface-3" />
-                <div className="ml-auto h-4 w-12 animate-pulse self-center rounded bg-surface-3" />
-                <div className="ml-auto h-8 w-8 animate-pulse self-center rounded-full bg-surface-3" />
+                <div className="ml-auto h-8 w-8 animate-pulse self-center rounded-xl bg-surface-3" />
               </div>
             ))}
           </div>
         ) : watchlistInstruments.length === 0 ? (
-          <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-border-strong bg-canvas px-4 text-center text-sm text-text-secondary">
-            No stocks in watchlist
-          </div>
+          <Card className="border-dashed border-border-strong bg-canvas/70">
+            <CardContent className="px-4 py-5 text-sm text-text-secondary">
+              <p className="font-medium text-text-primary">Starter watchlist is still empty.</p>
+              <p className="mt-2">Seeded instruments are ready to load once the watchlist service responds.</p>
+              {starterInstruments.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {starterInstruments.map((instrument) => (
+                    <Badge key={instrument.symbol} variant="secondary">
+                      {instrument.symbol}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
         ) : filteredWatchlistInstruments.length === 0 ? (
-          <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-border-strong bg-canvas px-4 text-center text-sm text-text-secondary">
-            No symbols match “{normalizedSearchQuery}”
-          </div>
+          <Card className="border-dashed border-border-strong bg-canvas/70">
+            <CardContent className="flex min-h-40 items-center justify-center px-4 py-5 text-center text-sm text-text-secondary">
+              No symbols match “{normalizedSearchQuery}”
+            </CardContent>
+          </Card>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {filteredWatchlistInstruments.map((instrument) => {
               const normalizedInstrumentSymbol = normalizeSymbol(instrument.symbol)
 

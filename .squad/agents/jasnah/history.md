@@ -12,3 +12,4 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 - 2026-05-24T19:51:02Z — Team update: Kaladin backend ready, Navani schema ready. Phase 1 smoke test dependencies satisfied. Ready to begin test implementation.
+- 2026-05-24T16:03:34-07:00 — Verification baseline: backend pytest and Ruff pass from `backend/`, frontend TypeScript/lint/build pass from `frontend/`, but there are no Vitest specs, no Playwright tests, and alert functionality is only represented in schema (`backend/migrations/002_news_alerts.sql`) rather than runtime API/UI code.
