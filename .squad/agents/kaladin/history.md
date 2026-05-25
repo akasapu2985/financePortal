@@ -14,3 +14,4 @@
 - 2026-05-24T12:26:16-07:00 — Database bootstrap uses `backend/src/db/migrate.py` plus SQL files in `backend/src/db/migrations/`, and `backend/src/seed.py` seeds the default instrument universe.
 - 2026-05-24T12:26:16-07:00 — Market data collection uses Yahoo Finance for prices, Finnhub for news, and APScheduler for recurring jobs gated by US market hours.
 - 2026-05-24T19:51:02Z — Team update: Navani schema + migrations ready, Renarin design spec ready, Adolin 75-issue backlog ready. Awaiting Phase 1 smoke test from Jasnah.
+- 2026-05-25T15:28:43-07:00 — Headline deduplication now lives in `pipeline/src/filters/deduplication.py` as a lazy-loaded sentence-transformers filter that returns JSON-storable embeddings and compares only the last 7 days of stored article embeddings before FinBERT runs.

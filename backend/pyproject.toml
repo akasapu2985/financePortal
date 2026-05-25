@@ -12,6 +12,7 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "yfinance>=0.2.54",
     "pydantic>=2.8.0",
+    "sentence-transformers>=3.0.0",
 ]
 
 [dependency-groups]
