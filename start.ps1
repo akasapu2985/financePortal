@@ -160,7 +160,7 @@ $null = Start-Job -Name $SchedulerJobName -ScriptBlock {
     param($RepoRoot, $BackendPath, $BackendSrcPath)
     Set-Location $RepoRoot
     $env:PYTHONPATH = $BackendSrcPath
-    uv run --directory $BackendPath python src\collectors\scheduler.py
+    uv run --directory $BackendPath python ..\pipeline\src\scheduler.py
 } -ArgumentList $RepoRoot, $BackendPath, $BackendSrcPath
 
 Write-Host "Scheduler job '$SchedulerJobName' is running in the background." -ForegroundColor Green

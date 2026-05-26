@@ -24,6 +24,14 @@ Ralph monitors work progress, reconciles GitHub Issues with actual codebase stat
 - 🟡 **0 in progress** — Dispatch available
 - **Next:** Squad ready to execute Phase 2 remaining work
 
+### 2026-05-25T17:38:20-07:00 — Post-pivot board audit
+- ✅ `gh` auth verified for `akasapu2985` (repo-scoped token active)
+- 📊 Open board now has **57 open issues**, all still labeled `go:needs-research`; **0** issues are assigned and **0** have `go:ready`
+- ✅ **43 issues closed in the last 7 days**; dashboard-era cleanup is already done, so there are **0 stale open dashboard issues** remaining
+- 🔁 Open issues #81, #83, #85, and #86 map to code already present on branch `squad/86-extraction-prompts` (`pipeline/src/scheduler.py`, `pipeline/src/intelligence/finbert.py`, `pipeline/src/intelligence/openrouter.py`, `pipeline/src/intelligence/extractor.py` + prompts)
+- ⚠️ The board still needs reconciliation because completed Phase 2 work remains open, while later-phase pipeline/MCP issues are still parked in `go:needs-research`
+- **Next:** close or retag the completed Phase 2 items first (#81, #83, #85, #86), then pick the next dependency-ordered pipeline item and mark it `go:ready`
+
 ## Learnings
 
 - GitHub auth: `gh` CLI is installed at `C:\Program Files\GitHub CLI` and authenticated as `akasapu2985`. Use `gh` for all GitHub operations. If not on PATH, add it: `$env:Path += ";C:\Program Files\GitHub CLI"`
